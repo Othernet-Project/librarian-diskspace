@@ -2,8 +2,8 @@ from bottle import request, redirect, MultiDict, abort
 from bottle_utils.html import hsize
 from bottle_utils.i18n import lazy_gettext as _, i18n_url
 
+from librarian_content.library.archive import Archive
 from librarian_core.contrib.templates.renderer import view
-from librarian_library.library.archive import Archive
 
 from . import zipballs
 

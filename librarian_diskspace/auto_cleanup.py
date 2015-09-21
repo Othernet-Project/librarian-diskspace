@@ -1,6 +1,6 @@
 import logging
 
-from librarian_library.library.archive import Archive
+from librarian_content.library.archive import Archive
 
 from . import zipballs
 

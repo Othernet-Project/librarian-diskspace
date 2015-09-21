@@ -13,7 +13,7 @@ import logging
 
 from bottle import request
 
-from librarian_library.library.content import to_path, filewalk
+from librarian_content.library.content import to_path, filewalk
 from librarian_sqlite import squery
 
 
