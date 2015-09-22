@@ -13,7 +13,7 @@ import logging
 
 from bottle import request
 
-from librarian_content.library.content import to_path, filewalk
+from librarian_content.library.content import get_content_size
 from librarian_sqlite import squery
 
 
@@ -124,24 +124,15 @@ def get_old_content(db=None):
     """
     db = db or request.db.main
     db.query("""
-             SELECT md5, updated, title, views, tags, archive
+             SELECT path, updated, title, views, tags, archive
              FROM zipballs
              ORDER BY tags IS NULL DESC,
                       views ASC,
                       updated ASC,
                       archive LIKE 'ephem%' DESC;
              """)
-    return db.results
-
-
-def get_content_size(md5, contentdir):
-    content_path = os.path.abspath(to_path(md5, prefix=contentdir))
-    return sum([os.stat(filepath).st_size
-                for filepath in filewalk(content_path)])
-
-
-def clone_zipball(zipball):
-    return dict((key, zipball[key]) for key in zipball.keys())
+    for item in db.results:
+        yield dict((key, item[key]) for key in item.keys())
 
 
 def cleanup_list(free_space, db=None, config=None):
@@ -152,14 +143,14 @@ def cleanup_list(free_space, db=None, config=None):
     configuration.
     """
     # TODO: tests
-    zipballs = iter(get_old_content(db=db))
+    items = get_old_content(db=db)
     config = config or request.app.config
     contentdir = config['library.contentdir']
     space = needed_space(free_space, config=config)
     while space > 0:
-        zipball = clone_zipball(next(zipballs))
-        if 'size' not in zipball:
-            zipball['size'] = get_content_size(zipball['md5'], contentdir)
-
-        space -= zipball['size']
-        yield zipball
+        content_item = next(items)
+        if 'size' not in content_item:
+            content_item['size'] = get_content_size(contentdir,
+                                                    content_item['path'])
+        space -= content_item['size']
+        yield content_item

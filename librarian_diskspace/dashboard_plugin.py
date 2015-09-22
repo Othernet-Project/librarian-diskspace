@@ -25,7 +25,7 @@ except AttributeError:
     raise RuntimeError("Disk space information not available on this platform")
 
 
-class Dashboard(DashboardPlugin):
+class DiskspaceDashboardPlugin(DashboardPlugin):
     # Translators, used as dashboard section title
     heading = _('Content library stats')
     name = 'diskspace'

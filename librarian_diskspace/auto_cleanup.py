@@ -13,16 +13,14 @@ def auto_cleanup(supervisor):
 
     archive = Archive.setup(
         supervisor.config['library.backend'],
-        supervisor.exts.databases.main,
-        unpackdir=supervisor.config['library.unpackdir'],
+        supervisor.exts.databases.content,
         contentdir=supervisor.config['library.contentdir'],
-        spooldir=supervisor.config['library.spooldir'],
         meta_filename=supervisor.config['library.metadata']
     )
-    deletable_list = zipballs.cleanup_list(free,
-                                           db=supervisor.exts.databases.main,
-                                           config=supervisor.config)
-    content_ids = [content['md5'] for content in deletable_list]
-    deleted = archive.remove_from_archive(content_ids)
+    deletables = zipballs.cleanup_list(free,
+                                       db=supervisor.exts.databases.content,
+                                       config=supervisor.config)
+    relpaths = [content['path'] for content in deletables]
+    deleted = archive.remove_from_archive(relpaths)
     msg = "Automatic cleanup has deleted {0} content entries.".format(deleted)
     logging.info(msg)

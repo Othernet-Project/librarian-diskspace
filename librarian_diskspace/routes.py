@@ -46,9 +46,7 @@ def cleanup():
         conf = request.app.config
         archive = Archive.setup(conf['library.backend'],
                                 request.db.main,
-                                unpackdir=conf['library.unpackdir'],
                                 contentdir=conf['library.contentdir'],
-                                spooldir=conf['library.spooldir'],
                                 meta_filename=conf['library.metadata'])
         if selected:
             archive.remove_from_archive([z['md5'] for z in selected])
