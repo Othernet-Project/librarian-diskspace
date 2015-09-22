@@ -1,23 +1,10 @@
 import mock
 
 from librarian_diskspace import zipballs as mod
-from librarian_sqlite.squery import Row
-
-
-def test_clone_zipball():
-    data = {'md5': 'somed5', 'param1': 'val1', 'param2': 'val2'}
-    zipball = mock.MagicMock(spec=Row, **data)
-    zipball.keys.return_value = data.keys()
-    clone = mod.clone_zipball(zipball)
-
-    assert len(zipball.keys()) == len(clone.keys())
-    for key in clone:
-        assert clone[key] == zipball[key]
 
 
 @mock.patch.object(mod.os.path, 'abspath')
 @mock.patch.object(mod, 'filewalk')
-@mock.patch.object(mod, 'to_path')
 @mock.patch.object(mod.os, 'stat')
 def test_get_content_size(os_stat, to_path, filewalk, abspath):
     filewalk.return_value = ['/path/to/content/s/o/m/e/m/d/5']

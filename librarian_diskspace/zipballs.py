@@ -9,62 +9,10 @@ file that comes with the source code, or http://www.gnu.org/licenses/gpl.txt.
 """
 
 import os
-import logging
 
 from bottle import request
 
 from librarian_content.library.content import get_content_size
-from librarian_sqlite import squery
-
-
-def get_database(dbpath):
-    """ Return database object given database path
-
-    :param dbpath:  database path
-    :returns:       `squery.Database` object
-    """
-    conn = squery.Database.connect(dbpath)
-    return squery.Database(conn)
-
-
-def get_zipballs_without_size(db):
-    """ Query the database for any zipballs with unset `size` column
-
-    :param db:  database object
-    :returns:   list of hashes
-    """
-    db.query('SELECT md5 FROM zipballs WHERE size IS NULL')
-    return [r['md5'] for r in db.results]
-
-
-def get_hash_paths(hashes, contentdir):
-    """ Return full zipball paths given their hashes
-
-    :param hashes:      list of MD5 hashes
-    :param contentdir:  directory containing zipballs
-    :returns:           list of hash-path two tuples
-    """
-    return [(h, os.path.join(contentdir, h + '.zip')) for h in hashes]
-
-
-def update_rows(hashpaths, db):
-    """ Update the size columns of all specified content
-
-    :param hashpaths:   list of hash-path two-tuples
-    :param db:          database object
-    """
-    logging.debug('DISKSPACE: updating size information for %s items',
-                  len(hashpaths))
-    sizes = ((os.stat(p).st_size, h) for h, p in hashpaths)
-    with db.transaction():
-        db.executemany("UPDATE zipballs SET size = ? WHERE md5 = ?", sizes)
-
-
-def update_sizes(dbpath, contentdir):
-    db = get_database(dbpath)
-    hashes = get_zipballs_without_size(db)
-    hashpaths = get_hash_paths(hashes, contentdir)
-    update_rows(hashpaths, db)
 
 
 def path_space(path):
@@ -93,14 +41,14 @@ def free_space(config=None):
 
 
 def used_space():
-    """ Return count of and total space taken by zipballs
+    """ Return count of and total space taken by content items
 
-    :returns:   two-tuple of zipballs count and space used by them
+    :returns:   two-tuple of content count and space used by them
     """
 
-    db = request.db.main
+    db = request.db.content
     q = db.Select(['COUNT(*) AS count', 'SUM(size) AS total'],
-                  sets='zipballs')
+                  sets='content')
     db.query(q)
     res = db.results
     return res[0]['count'], res[0]['total'] or 0
@@ -122,10 +70,10 @@ def get_old_content(db=None):
 
     :returns:   list of content ordered from oldest to newest
     """
-    db = db or request.db.main
+    db = db or request.db.content
     db.query("""
              SELECT path, updated, title, views, tags, archive
-             FROM zipballs
+             FROM content
              ORDER BY tags IS NULL DESC,
                       views ASC,
                       updated ASC,
