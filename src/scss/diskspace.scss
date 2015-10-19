@@ -1,5 +1,3 @@
-@import "outernet/mixins/grid";
-@import "outernet/mixins/fonts";
 
 #diskspace {
   .progress {
@@ -10,8 +8,10 @@
   .stat {
     margin-bottom: 0.5em;
 
+    /*
     .number {
       @include heading-1;
     }
+    */
   }
 }

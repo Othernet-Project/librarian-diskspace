@@ -1,4 +1,3 @@
-<%inherit file="_dashboard_section.tpl"/>
 <%namespace name="space_info" file="diskspace/_space_info.tpl"/>
 
 <p class="total">

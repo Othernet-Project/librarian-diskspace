@@ -1,4 +1,4 @@
-<%namespace name="widgets" file="../_widgets.tpl"/>
+<%namespace name="widgets" file="/ui/widgets.tpl"/>
 
 <%def name="space(free, total)">
 <% pct = round((total - free) / float(total) * 100, 1) if total else 100 %>
