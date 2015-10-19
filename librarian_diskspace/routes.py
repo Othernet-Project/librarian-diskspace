@@ -47,7 +47,7 @@ def cleanup():
         archive = Archive.setup(conf['library.backend'],
                                 request.db.content,
                                 contentdir=conf['library.contentdir'],
-                                meta_filename=conf['library.metadata'])
+                                meta_filenames=conf['library.metadata'])
         if selected:
             archive.remove_from_archive([z['md5'] for z in selected])
             request.app.supervisor.exts.cache.invalidate(prefix='content')

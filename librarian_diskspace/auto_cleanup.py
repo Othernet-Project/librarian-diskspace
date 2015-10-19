@@ -15,7 +15,7 @@ def auto_cleanup(supervisor):
         supervisor.config['library.backend'],
         supervisor.exts.databases.content,
         contentdir=supervisor.config['library.contentdir'],
-        meta_filename=supervisor.config['library.metadata']
+        meta_filenames=supervisor.config['library.metadata']
     )
     deletables = zipballs.cleanup_list(free,
                                        db=supervisor.exts.databases.content,
