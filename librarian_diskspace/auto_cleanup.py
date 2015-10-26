@@ -13,6 +13,7 @@ def auto_cleanup(supervisor):
 
     archive = Archive.setup(
         supervisor.config['library.backend'],
+        supervisor.exts.fsal,
         supervisor.exts.databases.content,
         contentdir=supervisor.config['library.contentdir'],
         meta_filenames=supervisor.config['library.metadata']

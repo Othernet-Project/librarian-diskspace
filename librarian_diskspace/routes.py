@@ -45,6 +45,7 @@ def cleanup():
     else:
         conf = request.app.config
         archive = Archive.setup(conf['library.backend'],
+                                request.app.supervisor.exts.fsal,
                                 request.db.content,
                                 contentdir=conf['library.contentdir'],
                                 meta_filenames=conf['library.metadata'])
