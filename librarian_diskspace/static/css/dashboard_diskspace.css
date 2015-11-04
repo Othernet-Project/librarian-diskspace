@@ -1,0 +1,24 @@
+/* line 3, ../../../src/scss/dashboard_diskspace.scss */
+.diskspace-storageinfo .storage-detail {
+  display: block;
+  margin-left: 4rem;
+  margin-bottom: 0.3rem;
+}
+/* line 9, ../../../src/scss/dashboard_diskspace.scss */
+.diskspace-storageinfo .storage-name {
+  text-transform: uppercase;
+}
+/* line 14, ../../../src/scss/dashboard_diskspace.scss */
+.diskspace-storageinfo .storage-type {
+  font-style: italic;
+  font-size: 90%;
+  margin-bottom: 0.5rem;
+}
+/* line 23, ../../../src/scss/dashboard_diskspace.scss */
+.diskspace-storageinfo .storage-icon {
+  font-size: 300%;
+  line-height: 75%;
+  float: left;
+  margin-right: 1rem;
+  vertical-align: top;
+}

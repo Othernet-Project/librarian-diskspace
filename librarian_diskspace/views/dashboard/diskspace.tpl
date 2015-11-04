@@ -1,28 +1,48 @@
-<%namespace name="space_info" file="diskspace/_space_info.tpl"/>
+<%namespace name="ui" file="/ui/widgets.tpl"/>
 
-<p class="total">
-${space_info.space(free, total)}
-</p>
+<div class="diskspace-storageinfo">
+    <%
+        usage = storage.stat
+        disk = storage.disk
 
-% if needed:
-<p class="warning">
-## Translators, this is a warning message appearing when disk space is below minimum
-${_('You are running low on disk space.')}
-## Translators, this is a button label that leads to page for library cleanup
-<a href="${i18n_url('plugins:diskspace:cleanup')}">${_('Free some space now')}</a>
-</p>
-% endif
+        if disk.bus != 'usb':
+            # This is not an attached disk
+            disk_type = 'internal'
+            # Translators, used as description of storage device
+            disk_type_label = _('intenal storage')
+        elif disk.is_removable:
+            # This is an USB stick
+            disk_type = 'usbstick'
+            # Translators, used as description of storage device
+            disk_type_label = _('removable storage')
+        else:
+            # Most likely USB-attached hard drive
+            disk_type = 'usbdrive'
+            # Translators, used as description of storage device
+            disk_type_label = _('removable storage')
 
-<div class="content-archive">
-    <div class="stat count">
-    <span class="number">${count}</span>
-    ## Translators, used as a label in content library stats section on dashboard, preceded by count of items in the library
-    <span class="label">${ngettext('item in the library', 'items in the library', count)}</span>
-    </div>
-
-    <div class="stat space">
-    <span class="number">${h.hsize(used)}</span>
-    ## Translators, used as a label in content library stats section on dashboard, preceded by library size in bytes, KB, MB, etc
-    <span class="label">${_('used space')}</span>
-    </div>
+        if disk.vendor or disk.model:
+            disk_name = '{} {}'.format(
+                disk.vendor or '',
+                disk.model or '')
+        else:
+            disk_name = storage.name
+    %>
+    <span class="storage-icon icon icon-storage-${disk_type}"></span>
+    <span class="storage-name storage-detail">
+        ${disk_name}
+    </span>
+    <span class="storage-type storage-detail">
+        ${disk_type_label}
+    </span>
+    <span class="storage-usage storage-detail">
+        ${ui.progress_mini(usage.pct_used)}
+        ## Translators, this is used next to disk space usage indicator in settings 
+        ## panel. The {used}, {total}, and {free} are placeholders.
+        ${_('{used} of {total} ({free} free)').format(
+            used=h.hsize(usage.used),
+            total=h.hsize(usage.total),
+            free=h.hsize(usage.free))}
+    </span>
 </div>
+
