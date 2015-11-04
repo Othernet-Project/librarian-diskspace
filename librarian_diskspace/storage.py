@@ -10,23 +10,66 @@ file that comes with the source code, or http://www.gnu.org/licenses/gpl.txt.
 
 import os
 
+import pyudev
+import hwd.udev
+import hwd.storage
 from bottle import request
 
 from librarian_content.library.content import get_content_size
 
 
-def path_space(path):
-    """ Return device number and free space in bytes for given path
-
-    :param path:    path for which to return the data
-    :returns:       three-tuple containing drive number, free space, total
-                    space
+def iterpath(path):
     """
-    dev = os.stat(path).st_dev
-    stat = os.statvfs(path)
-    free = stat.f_frsize * stat.f_bavail
-    total = stat.f_blocks * stat.f_frsize
-    return dev, free, total
+    Start from path, and iterate over the tree bottom-up until root is reached.
+    Last item returned is always the root.
+    """
+    path = os.path.abspath(path)
+    while True:
+        yield path
+        path = os.path.dirname(path)
+    yield path
+
+
+def find_mount_point(path):
+    """
+    Return a ``hwd.storage.MtabEntry`` object representing the mount point
+    under which the path exists including the path itself if path is the mount
+    point.
+
+    For example, if path is /foo/bar and a storage device is mounted under
+    /foo/bar, then ``MtabEntry`` for /foo/bar is returned. If a storage device
+    is mounted under /foo, then ``MtabEntry`` for /foo is returned, and so on.
+
+    Raises ``ValueError`` if no mount points are found.
+    """
+    mount_points = {e.mdir: e for e in hwd.storage.mounts()}
+    for p in iterpath(path):
+        if p in mount_points:
+            return mount_points[p]
+    raise ValueError('No mount points found in {}'.format(path))
+
+
+def get_storage_by_mtab_devname(path, devname):
+    """
+    Return a single storage device object for which one of the aliases matches
+    device name in mtab. Returns ``None`` if no devices match.
+    """
+    ctx = pyudev.Context()
+    devs = [storage.Partition(d)
+            for d in ctx.list_devices(subsystem='block', DEVTYPE='partition'))]
+    for d in devs:
+        if devname in d.aliases:
+            return d
+    return None
+
+
+def get_contentdir_storage(contentdir):
+    """
+    Return a mountable device object matching a storage device used to house
+    the content directory.
+    """
+    mtab_entry = find_mount_point(contendir)
+    return get_storage_by_mtab_devname(mtab_entry.dev)
 
 
 def free_space(config=None):
