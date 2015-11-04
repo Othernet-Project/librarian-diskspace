@@ -49,38 +49,30 @@ def find_mount_point(path):
     raise ValueError('No mount points found in {}'.format(path))
 
 
-def get_storage_by_mtab_devname(path, devname):
+def get_storage_by_mtab_devname(devname):
     """
     Return a single storage device object for which one of the aliases matches
     device name in mtab. Returns ``None`` if no devices match.
     """
     ctx = pyudev.Context()
-    devs = [storage.Partition(d)
-            for d in ctx.list_devices(subsystem='block', DEVTYPE='partition'))]
+    parts = ctx.list_devices(subsystem='block', DEVTYPE='partition')
+    ubis = ctx.list_devices(subsystem='ubi').match_attribute('alignment', '1')
+    devs = map(hwd.storage.Partition, parts) + map(hwd.storage.UbiVolume, ubis)
     for d in devs:
         if devname in d.aliases:
             return d
     return None
 
 
-def get_contentdir_storage(contentdir):
+def get_contentdir_storage():
     """
     Return a mountable device object matching a storage device used to house
     the content directory.
     """
-    mtab_entry = find_mount_point(contendir)
+    config = request.app.config
+    contentdir = config['library.contentdir']
+    mtab_entry = find_mount_point(contentdir)
     return get_storage_by_mtab_devname(mtab_entry.dev)
-
-
-def free_space(config=None):
-    """ Returns free space information about content directory
-
-    :returns:   two-tuple of free space and total space
-    """
-    config = config or request.app.config
-    cdir = config['library.contentdir']
-    cdev, cfree, ctot = path_space(cdir)
-    return cfree, ctot
 
 
 def used_space():

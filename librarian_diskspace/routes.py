@@ -5,15 +5,15 @@ from bottle_utils.i18n import lazy_gettext as _, i18n_url
 from librarian_content.library.archive import Archive
 from librarian_core.contrib.templates.renderer import view
 
-from . import zipballs
+from . import storage
 
 
 @view('diskspace/cleanup', message=None, vals=MultiDict())
 def cleanup_list():
     """ Render a list of items that can be deleted """
-    free = zipballs.free_space()[0]
-    return {'metadata': zipballs.cleanup_list(free),
-            'needed': zipballs.needed_space(free)}
+    free = storage.get_contentdir_storage().stat.free
+    return {'metadata': storage.cleanup_list(free),
+            'needed': storage.needed_space(free)}
 
 
 @view('diskspace/cleanup', message=None, vals=MultiDict())
@@ -23,8 +23,8 @@ def cleanup():
     if action not in ['check', 'delete']:
         # Translators, used as response to innvalid HTTP request
         abort(400, _('Invalid request'))
-    free = zipballs.free_space()[0]
-    cleanup = list(zipballs.cleanup_list(free))
+    free = storage.get_contentdir_storage().stat.free
+    cleanup = list(storage.cleanup_list(free))
     selected = forms.getall('selection')
     metadata = list(cleanup)
     selected = [z for z in metadata if z['md5'] in selected]
@@ -41,7 +41,7 @@ def cleanup():
                 # KB, MB, etc
                 _('%s can be freed by removing selected content')) % tot
         return {'vals': forms, 'metadata': metadata, 'message': message,
-                'needed': zipballs.needed_space(free)}
+                'needed': storage.needed_space(free)}
     else:
         conf = request.app.config
         archive = Archive.setup(conf['library.backend'],

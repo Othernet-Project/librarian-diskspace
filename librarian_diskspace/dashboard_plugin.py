@@ -34,8 +34,6 @@ class DiskspaceDashboardPlugin(DashboardPlugin):
         return 'dashboard/' + self.name
 
     def get_context(self):
-        free, total = zipballs.free_space()
-        count, used = zipballs.used_space()
-        needed = zipballs.needed_space(free)
-        return dict(free=free, total=total, count=count, used=used,
-                    needed=needed)
+        sdev = storage.get_contentdir_storage()
+        usage = sdev.stat
+        return dict(storage=sdev)
