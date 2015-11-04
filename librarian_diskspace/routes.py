@@ -35,11 +35,12 @@ def cleanup():
             message = _('No content selected')
         else:
             tot = hsize(sum([s['size'] for s in selected]))
-            message = str(
-                # Translators, used when user is previewing clean-up, %s is
-                # replaced by amount of content that can be freed in bytes,
-                # KB, MB, etc
-                _('%s can be freed by removing selected content')) % tot
+            # Translators, used when user is previewing clean-up. {space} is a
+            # placeholder, replaced by amount of content that can be freed in
+            # bytes, KB, MB, etc, please do not translate.
+            message = _(
+                '{space} can be freed by removing selected content').format(
+                    tot)
         return {'vals': forms, 'metadata': metadata, 'message': message,
                 'needed': storage.needed_space(free)}
     else:
