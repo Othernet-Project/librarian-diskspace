@@ -9,7 +9,7 @@
             # This is not an attached disk
             disk_type = 'internal'
             # Translators, used as description of storage device
-            disk_type_label = _('intenal storage')
+            disk_type_label = _('internal storage')
         elif disk.is_removable:
             # This is an USB stick
             disk_type = 'usbstick'
