@@ -2,12 +2,12 @@ import logging
 
 from librarian_content.library.archive import Archive
 
-from . import zipballs
+from . import storage
 
 
 def auto_cleanup(supervisor):
-    (free, _) = zipballs.free_space(config=supervisor.config)
-    needed_space = zipballs.needed_space(free, config=supervisor.config)
+    (free, _) = storage.free_space(config=supervisor.config)
+    needed_space = storage.needed_space(free, config=supervisor.config)
     if not needed_space:
         return
 
@@ -18,7 +18,7 @@ def auto_cleanup(supervisor):
         contentdir=supervisor.config['library.contentdir'],
         meta_filenames=supervisor.config['library.metadata']
     )
-    deletables = zipballs.cleanup_list(free,
+    deletables = storage.cleanup_list(free,
                                        db=supervisor.exts.databases.content,
                                        config=supervisor.config)
     relpaths = [content['path'] for content in deletables]

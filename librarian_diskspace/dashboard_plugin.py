@@ -16,7 +16,7 @@ from bottle_utils.i18n import lazy_gettext as _
 
 from librarian_dashboard.dashboard import DashboardPlugin
 
-from . import zipballs
+from . import storage
 
 
 try:
@@ -27,12 +27,13 @@ except AttributeError:
 
 class DiskspaceDashboardPlugin(DashboardPlugin):
     # Translators, used as dashboard section title
-    heading = _('Content library stats')
+    heading = _('Storage devices')
     name = 'diskspace'
 
+    def get_template(self):
+        return 'dashboard/' + self.name
+
     def get_context(self):
-        free, total = zipballs.free_space()
-        count, used = zipballs.used_space()
-        needed = zipballs.needed_space(free)
-        return dict(free=free, total=total, count=count, used=used,
-                    needed=needed)
+        sdev = storage.get_contentdir_storage()
+        usage = sdev.stat
+        return dict(storage=sdev)
