@@ -22,12 +22,6 @@ To enable this component, add it to the list of components in librarian_'s
     +components =
         librarian_diskspace
 
-And to the list of dashboard plugins::
-
-    [dashboard]
-    plugins =
-        diskspace
-
 Development
 -----------
 
