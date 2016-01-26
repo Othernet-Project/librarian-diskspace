@@ -9,6 +9,7 @@ def check_diskspace(supervisor):
     mtab_entry = storage.find_mount_point(contentdir)
     sdev = storage.get_storage_by_mtab_devname(mtab_entry.dev)
     free = int(sdev.stat.free)
+    supervisor.exts.notifications.delete_by_category('diskspace', db)
     if free < threshold:
         supervisor.exts.notifications.send(
             'Running low on disk space, please contact an administrator',
@@ -21,9 +22,3 @@ def check_diskspace(supervisor):
             category='diskspace',
             group='superuser',
             db=db)
-    else:
-        notifications = supervisor.exts.notifications.fetch_by_category('diskspace', db)
-        if not notifications:
-            return
-        for n in notifications:
-            n.delete()
