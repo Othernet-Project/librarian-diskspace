@@ -53,7 +53,7 @@ def get_storage_by_mtab_devname(devname):
     device name in mtab. Returns ``None`` if no devices match.
     """
     ctx = pyudev.Context()
-    parts = ctx.list_devices(subsystem='block', DEVTYPE='partition')
+    parts = ctx.list_devices(subsystem='block', ID_FS_USAGE='filesystem')
     ubis = ctx.list_devices(subsystem='ubi').match_attribute('alignment', '1')
     devs = map(hwd.storage.Partition, parts) + map(hwd.storage.UbiVolume, ubis)
     for d in devs:
