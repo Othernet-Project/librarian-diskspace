@@ -14,11 +14,13 @@ def check_diskspace(supervisor):
         supervisor.exts.notifications.send(
             'Running low on disk space, please contact an administrator.',
             category='diskspace',
+            dismissable=False,
             group='guest',
             db=db)
         supervisor.exts.notifications.send(
             '%sMB of free diskspace, please remove some files.' %
             str(free/1000/1000),
             category='diskspace',
+            dismissable=False,
             group='superuser',
             db=db)
