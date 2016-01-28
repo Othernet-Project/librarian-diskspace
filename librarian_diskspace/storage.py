@@ -72,6 +72,7 @@ def get_content_storages():
     for path in config['storage.paths']:
         mtab_entry = find_mount_point(path)
         sinfo = get_storage_by_mtab_devname(mtab_entry.dev)
-        storages.append(sinfo)
+        if sinfo:
+            storages.append(sinfo)
     return storages
 
