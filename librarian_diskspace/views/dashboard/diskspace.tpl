@@ -1,5 +1,6 @@
 <%namespace name="ui" file="/ui/widgets.tpl"/>
 
+% for storage in found_storages:
 <div class="diskspace-storageinfo">
     <%
         usage = storage.stat
@@ -45,4 +46,4 @@
             free=h.hsize(usage.free))}
     </span>
 </div>
-
+% endfor

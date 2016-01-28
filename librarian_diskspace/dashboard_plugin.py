@@ -34,6 +34,5 @@ class DiskspaceDashboardPlugin(DashboardPlugin):
         return 'dashboard/' + self.name
 
     def get_context(self):
-        sdev = storage.get_contentdir_storage()
-        usage = sdev.stat
-        return dict(storage=sdev)
+        storages = storage.get_content_storages()
+        return dict(found_storages=storages)
