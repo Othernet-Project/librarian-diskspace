@@ -62,13 +62,17 @@ def get_storage_by_mtab_devname(devname):
     return None
 
 
-def get_contentdir_storage():
+def get_content_storages(config=None):
     """
     Return a mountable device object matching a storage device used to house
     the content directory.
     """
-    config = request.app.config
-    contentdir = config['library.contentdir']
-    mtab_entry = find_mount_point(contentdir)
-    return get_storage_by_mtab_devname(mtab_entry.dev)
+    config = config or request.app.config
+    storages = []
+    for path in config['storage.paths']:
+        mtab_entry = find_mount_point(path)
+        sinfo = get_storage_by_mtab_devname(mtab_entry.dev)
+        if sinfo:
+            storages.append(sinfo)
+    return storages
 
