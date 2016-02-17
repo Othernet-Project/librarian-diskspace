@@ -1,20 +1,19 @@
-from bottle_utils.i18n import gettet_lazy as _
-
 from . import storage
 
+# FIXME: The notifications messages need to be translatable
 
 def send_storage_notification(supervisor, db):
     supervisor.exts.notifications.send(
-        _('Storage space is getting low. Please ask the administrator to take '
-          'action.'),
+        'Storage space is getting low. Please ask the administrator to take '
+        'action.',
         category='diskspace',
         dismissable=False,
         group='guest',
         db=db)
     supervisor.exts.notifications.send(
-        _('Storage space is getting low. You will stop receiving new content '
-          'if you run out of storage space. Please change or attach an '
-          'external storage device.'),
+        'Storage space is getting low. You will stop receiving new content '
+        'if you run out of storage space. Please change or attach an '
+        'external storage device.',
         category='diskspace',
         dismissable=False,
         group='superuser',
