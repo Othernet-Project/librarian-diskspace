@@ -1,4 +1,24 @@
+from bottle_utils.i18n import gettet_lazy as _
+
 from . import storage
+
+
+def send_storage_notification(supervisor, db):
+    supervisor.exts.notifications.send(
+        _('Storage space is getting low. Please ask the administrator to take '
+          'action.'),
+        category='diskspace',
+        dismissable=False,
+        group='guest',
+        db=db)
+    supervisor.exts.notifications.send(
+        _('Storage space is getting low. You will stop receiving new content '
+          'if you run out of storage space. Please change or attach an '
+          'external storage device.'),
+        category='diskspace',
+        dismissable=False,
+        group='superuser',
+        db=db)
 
 
 def check_diskspace(supervisor):
@@ -6,17 +26,11 @@ def check_diskspace(supervisor):
     threshold = int(config['diskspace.threshold'])
     db = supervisor.exts.databases['notifications']
     supervisor.exts.notifications.delete_by_category('diskspace', db)
-    if all([int(strg.stat.free) < threshold
-            for strg in storage.get_content_storages(config=config)]):
-        supervisor.exts.notifications.send(
-            'Storage space is getting low. Please ask the administrator to take action.',
-            category='diskspace',
-            dismissable=False,
-            group='guest',
-            db=db)
-        supervisor.exts.notifications.send(
-            'Storage space is getting low. You will stop receiving new content if you run out of storage space. Please change or attach an external storage device.',
-            category='diskspace',
-            dismissable=False,
-            group='superuser',
-            db=db)
+    storage_devices = storage.get_content_storages(config=config)
+    if not storage_devices:
+        # None found, probably due to misconfiguration
+        return
+    # Note that we only check the last storage. It is assumed that the storage
+    # configuration places external storage at the last position in the list.
+    if int(storage_devices[-1].stat.free) < threshold:
+        send_storage_notification(supervisor, db)
