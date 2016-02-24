@@ -36,6 +36,7 @@ class DiskspaceDashboardPlugin(DashboardPlugin):
         return 'dashboard/' + self.name
 
     def get_context(self):
-        check_diskspace(request.app.supervisor)
-        storages = storage.get_content_storages()
+        supervisor = request.app.supervisor
+        check_diskspace(supervisor)
+        storages = storage.get_content_storages(supervisor)
         return dict(found_storages=storages)

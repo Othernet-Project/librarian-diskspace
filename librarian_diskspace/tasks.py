@@ -25,7 +25,7 @@ def check_diskspace(supervisor):
     threshold = int(config['diskspace.threshold'])
     db = supervisor.exts.databases['notifications']
     supervisor.exts.notifications.delete_by_category('diskspace', db)
-    storage_devices = storage.get_content_storages(config=config)
+    storage_devices = storage.get_content_storages(supervisor)
     if not storage_devices:
         # None found, probably due to misconfiguration
         return
