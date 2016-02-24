@@ -13,7 +13,6 @@ import os
 import pyudev
 import hwd.udev
 import hwd.storage
-from bottle import request
 
 
 def iterpath(path):
