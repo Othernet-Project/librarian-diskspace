@@ -62,17 +62,17 @@ def get_storage_by_mtab_devname(devname):
     return None
 
 
-def get_content_storages(config=None):
+def get_content_storages(supervisor):
     """
     Return a mountable device object matching a storage device used to house
     the content directory.
     """
-    config = config or request.app.config
+    success, base_paths = supervisor.exts.fsal.list_base_paths()
+    assert success, 'fsal failed to list base paths'
     storages = []
-    for path in config['storage.paths']:
+    for path in base_paths:
         mtab_entry = find_mount_point(path)
         sinfo = get_storage_by_mtab_devname(mtab_entry.dev)
         if sinfo:
             storages.append(sinfo)
     return storages
-
