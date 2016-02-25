@@ -21,7 +21,6 @@
             disk_type = 'usbdrive'
             # Translators, used as description of storage device
             disk_type_label = _('removable storage')
-
         if disk.vendor or disk.model:
             disk_name = '{} {}'.format(
                 disk.vendor or '',
@@ -44,6 +43,11 @@
             used=h.hsize(usage.used),
             total=h.hsize(usage.total),
             free=h.hsize(usage.free))}
+        ## Translators, this is used as a button to move all data to that drive
+        <form action="${i18n_url('disk:consolidate')}" method="POST">
+          <button type="submit" name="consolidate" value="${storage.uuid}" 
+          class="consolidate">consolidate</button>
+        </form>
     </span>
 </div>
 % endfor
