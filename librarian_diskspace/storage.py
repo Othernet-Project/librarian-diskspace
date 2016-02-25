@@ -73,5 +73,6 @@ def get_content_storages(supervisor):
         mtab_entry = find_mount_point(path)
         sinfo = get_storage_by_mtab_devname(mtab_entry.dev)
         if sinfo:
+            sinfo.base_path = path
             storages.append(sinfo)
     return storages
