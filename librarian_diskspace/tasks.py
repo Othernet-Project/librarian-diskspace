@@ -8,6 +8,7 @@ def send_storage_notification(supervisor, db):
         'action.',
         category='diskspace',
         dismissable=False,
+        priority=supervisor.exts.notifications.URGENT,
         group='guest',
         db=db)
     supervisor.exts.notifications.send(
@@ -16,6 +17,7 @@ def send_storage_notification(supervisor, db):
         'external storage device.',
         category='diskspace',
         dismissable=False,
+        priority=supervisor.exts.notifications.URGENT,
         group='superuser',
         db=db)
 
