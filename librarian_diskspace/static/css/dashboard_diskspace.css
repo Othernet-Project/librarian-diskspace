@@ -22,3 +22,8 @@
   margin-right: 1rem;
   vertical-align: top;
 }
+/* line 34, ../../../src/scss/dashboard_diskspace.scss */
+.diskspace-storageinfo .consolidate {
+  margin-top: 0.3rem;
+  margin-bottom: 1.0rem;
+}
