@@ -46,7 +46,7 @@
         ## Translators, this is used as a button to move all data to that drive
         <form action="${i18n_url('disk:consolidate')}" method="POST">
           <button type="submit" name="consolidate" value="${storage.uuid}" 
-          class="consolidate">consolidate</button>
+          class="consolidate">Move files here</button>
         </form>
     </span>
 </div>
