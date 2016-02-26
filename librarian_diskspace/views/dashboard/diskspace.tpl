@@ -3,10 +3,15 @@
 % for storage in found_storages:
 <div class="diskspace-storageinfo">
     <%
+        is_loop = storage.name.startswith('loop')
         usage = storage.stat
         disk = storage.disk
 
-        if disk.bus != 'usb':
+        if is_loop:
+            disk_type = 'internal'
+            # Translators, used as description of storage device
+            disk_type_label = _('internal storage')
+        elif disk.bus != 'usb':
             # This is not an attached disk
             disk_type = 'internal'
             # Translators, used as description of storage device
@@ -21,7 +26,11 @@
             disk_type = 'usbdrive'
             # Translators, used as description of storage device
             disk_type_label = _('removable storage')
-        if disk.vendor or disk.model:
+
+        if is_loop:
+            # Translators, appears as device name under storage devices
+            disk_name = _('Virtual disk')
+        elif disk.vendor or disk.model:
             disk_name = '{} {}'.format(
                 disk.vendor or '',
                 disk.model or '')
