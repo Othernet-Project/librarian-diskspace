@@ -1,13 +1,13 @@
 <%namespace name="ui" file="/ui/widgets.tpl"/>
 <%namespace name="consolidate_button" file="_consolidate_button.tpl"/>
 
-<def name="button(storage)">
+<def name="button(s)">
     <form action="${i18n_url('disk:consolidate')}" method="POST"
-     class="consolidate-form" id="${storage.uuid}">
-      <button type="submit" name="consolidate" value="${storage.uuid}" 
+     class="consolidate-form" id="${s.uuid}">
+      <button type="submit" name="consolidate" value="${s.uuid}" 
       class="consolidate">Move files here</button>
     % if errors:
-        % if storage.uuid in errors:
+        % if s.uuid in errors:
             <span>error found!</span>
         % endif
     % endif
@@ -66,7 +66,7 @@
             used=h.hsize(usage.used),
             total=h.hsize(usage.total),
             free=h.hsize(usage.free))}
-        ${button(storage)}
+        ${button(s)}
     </span>
 </div>
 % endfor
