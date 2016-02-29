@@ -1,7 +1,7 @@
 <%namespace name="ui" file="/ui/widgets.tpl"/>
 <%namespace name="consolidate_button" file="_consolidate_button.tpl"/>
 
-<def name="_button(storage)">
+<def name="button(storage)">
     <form action="${i18n_url('disk:consolidate')}" method="POST"
      class="consolidate-form" id="${storage.uuid}">
       <button type="submit" name="consolidate" value="${storage.uuid}" 
@@ -66,7 +66,7 @@
             used=h.hsize(usage.used),
             total=h.hsize(usage.total),
             free=h.hsize(usage.free))}
-        ${self._button(storage)}
+        ${button(storage)}
     </span>
 </div>
 % endfor
