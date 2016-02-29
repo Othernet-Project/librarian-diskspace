@@ -1,6 +1,19 @@
 <%namespace name="ui" file="/ui/widgets.tpl"/>
 <%namespace name="consolidate_button" file="_consolidate_button.tpl"/>
 
+<def name="_button(storage)">
+    <form action="${i18n_url('disk:consolidate')}" method="POST"
+     class="consolidate-form" id="${storage.uuid}">
+      <button type="submit" name="consolidate" value="${storage.uuid}" 
+      class="consolidate">Move files here</button>
+    % if errors:
+        % if storage.uuid in errors:
+            <span>error found!</span>
+        % endif
+    % endif
+    </form>
+</def>
+
 % for storage in found_storages:
 <div class="diskspace-storageinfo">
     <%
@@ -53,7 +66,7 @@
             used=h.hsize(usage.used),
             total=h.hsize(usage.total),
             free=h.hsize(usage.free))}
-        ${consolidate_button.body()}
+        ${self._button(storage)}
     </span>
 </div>
 % endfor
