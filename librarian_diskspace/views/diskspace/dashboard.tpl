@@ -1,4 +1,5 @@
 <%namespace name="ui" file="/ui/widgets.tpl"/>
+<%namespace name="consolidate_button" file="_consolidate_button.tpl"/>
 
 % for storage in found_storages:
 <div class="diskspace-storageinfo">
@@ -52,11 +53,7 @@
             used=h.hsize(usage.used),
             total=h.hsize(usage.total),
             free=h.hsize(usage.free))}
-        ## Translators, this is used as a button to move all data to that drive
-        <form action="${i18n_url('disk:consolidate')}" method="POST">
-          <button type="submit" name="consolidate" value="${storage.uuid}" 
-          class="consolidate">Move files here</button>
-        </form>
+        ${consolidate_button.body()}
     </span>
 </div>
 % endfor
