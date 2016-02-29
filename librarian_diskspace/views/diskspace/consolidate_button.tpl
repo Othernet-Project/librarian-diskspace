@@ -1,5 +1,5 @@
 ## Translators, this is used as a button to move all data to that drive
-<def name="button(uuid)">
+<%def name="button(uuid)">
     <form action="${i18n_url('disk:consolidate')}" method="POST"
      class="consolidate-form" id="${uuid}">
       <button type="submit" name="consolidate" value="${uuid}" 
@@ -11,4 +11,4 @@
         % endif
     % endif
     </form>
-</def>
+</%def>
