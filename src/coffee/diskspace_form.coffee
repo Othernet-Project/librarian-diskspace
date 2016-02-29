@@ -3,21 +3,28 @@
   url = diskForm.attr 'action'
 
 
-  submitData = (data) ->
-    console.log(data)
+  submitData = (t, data) ->
+    uuid = data.consolidate
     res = $.post url, data
-    console.log(res)
     res.done (data) ->
-      diskForm.html "success"
+      resData = $.parseJSON res.responseText
+      if resData.error
+        message = resData.error
+      else
+        message = resData.success
+      t.html "<p class='consolidate o-form-error'>" + message + "</p>"
 
     res.fail () ->
-      diskForm.html "failure"
+      message = "Critical failure, see librarian log for the traceback"
+      t.html "<p class='consolidate o-form-error'>" + message + "</p>"
 
 
   diskForm.on 'submit', (e) ->
+    t = $ this
     e.preventDefault()
-    uuid = diskForm.attr 'id'
-    submitData uuid
+    uuid = t.attr 'id'
+    data = t.serialize()
+    submitData t, {'consolidate': uuid}
 
 
 ) this, this.jQuery

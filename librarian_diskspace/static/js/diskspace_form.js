@@ -3,22 +3,34 @@
   var diskForm, submitData, url;
   diskForm = $('.consolidate-form');
   url = diskForm.attr('action');
-  submitData = function(data) {
-    var res;
-    console.log(data);
+  submitData = function(t, data) {
+    var res, uuid;
+    uuid = data.consolidate;
     res = $.post(url, data);
-    console.log(res);
     res.done(function(data) {
-      return diskForm.html("success");
+      var message, resData;
+      resData = $.parseJSON(res.responseText);
+      if (resData.error) {
+        message = resData.error;
+      } else {
+        message = resData.success;
+      }
+      return t.html("<p class='consolidate o-form-error'>" + message + "</p>");
     });
     return res.fail(function() {
-      return diskForm.html("failure");
+      var message;
+      message = "Critical failure, see librarian log for the traceback";
+      return t.html("<p class='consolidate o-form-error'>" + message + "</p>");
     });
   };
   return diskForm.on('submit', function(e) {
-    var uuid;
+    var data, t, uuid;
+    t = $(this);
     e.preventDefault();
-    uuid = diskForm.attr('id');
-    return submitData(uuid);
+    uuid = t.attr('id');
+    data = t.serialize();
+    return submitData(t, {
+      'consolidate': uuid
+    });
   });
 })(this, this.jQuery);
