@@ -33,7 +33,7 @@ class DiskspaceDashboardPlugin(DashboardPlugin):
     name = 'diskspace'
 
     def get_template(self):
-        return 'dashboard/' + self.name
+        return self.name + '/dashboard.tpl'
 
     def get_context(self):
         supervisor = request.app.supervisor
