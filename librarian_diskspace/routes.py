@@ -1,8 +1,8 @@
 from .storage import get_content_storages
-from librarian_core.contrib.templates.renderer import view
+from librarian_core.contrib.templates.renderer import view, template
 
 from bottle import request
-
+from bottle_utils.i18n import i18n_url
 
 _ = lambda x: x
 
@@ -82,7 +82,13 @@ def schedule_consolidate():
                                    delay=0,
                                    periodic=False)
 
-
+    return template('ui/feedback',
+                    status='success',
+                    page_title="File consolidation scheduled",
+                    message="Consolidation from {} to {} has been scheduled "
+                    "successfully.".format(paths, dest),
+                    redirect_url=i18n_url('dashboard:main'),
+                    redirect_target=_("Dashboard"))
 
 def routes(app):
     return (
