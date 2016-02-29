@@ -1,5 +1,5 @@
 ((window, $) ->
-  diskForm = $ '.consolidate-form'
+  diskForm = $ '.form'
   url = diskForm.attr 'action'
 
 
