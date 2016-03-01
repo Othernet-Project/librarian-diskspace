@@ -11,7 +11,7 @@ def success_notification(supervisor, db, paths, dest):
     supervisor.exts.notifications.send(
         # Translators, notification is displayed while files are being moved to
         # external storage
-        getttext('Files were successfully moved to {} completed '
+        gettext('Files were successfully moved to {} completed '
                  'successfully.'.format(dest)),
         category='consolidate_storage',
         dismissable=True,
