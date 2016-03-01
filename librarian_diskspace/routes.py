@@ -11,16 +11,8 @@ def success_notification(supervisor, db, paths, dest):
     supervisor.exts.notifications.send(
         # Translators, notification is displayed while files are being moved to
         # external storage
-        _('Disk consolidation completed successfully.'),
-        category='consolidate_storage',
-        dismissable=True,
-        group='guest',
-        db=db)
-    supervisor.exts.notifications.send(
-        # Translators, notification is displayed while files are being moved to
-        # external storage
-        _('Disk consolidation from {} to {} completed successfully.'.format(
-            paths, dest)),
+        _('Files were successfully moved to {} completed successfully.'.format(
+            dest)),
         category='consolidate_storage',
         dismissable=True,
         group='superuser',
@@ -28,14 +20,6 @@ def success_notification(supervisor, db, paths, dest):
 
 
 def notification(supervisor, db, message):
-    supervisor.exts.notifications.send(
-        # Translators, notification is displayed while files are being moved to
-        # external storage
-        _(message),
-        category='consolidate_storage',
-        dismissable=True,
-        group='guest',
-        db=db)
     supervisor.exts.notifications.send(
         # Translators, notification is displayed while files are being moved to
         # external storage
