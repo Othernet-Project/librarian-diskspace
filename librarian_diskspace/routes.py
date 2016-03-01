@@ -2,17 +2,17 @@ from .storage import get_content_storages
 from librarian_core.contrib.templates.renderer import view, template
 
 from bottle import request
-from bottle_utils.i18n import i18n_url
+from bottle_utils.i18n import i18n_url, lazy_gettext as _
 
-_ = lambda x: x
+gettext = lambda x: x
 
 
 def success_notification(supervisor, db, paths, dest):
     supervisor.exts.notifications.send(
         # Translators, notification is displayed while files are being moved to
         # external storage
-        _('Files were successfully moved to {} completed successfully.'.format(
-            dest)),
+        getttext('Files were successfully moved to {} completed '
+                 'successfully.'.format(dest)),
         category='consolidate_storage',
         dismissable=True,
         group='superuser',
@@ -58,8 +58,7 @@ def schedule_consolidate():
         total_size += supervisor.exts.fsal.get_path_size(p)
     if total_size > free_space:
         return {
-            'error': "Not enough free space. {} was free, needed {}".format(
-                free_space, total_size)
+            'error': _("Not enough free space. {} needed.").format(total_size)
         }
 
     supervisor.exts.tasks.schedule(consolidate,
@@ -70,8 +69,8 @@ def schedule_consolidate():
     return template('ui/feedback',
                     status='success',
                     page_title="File consolidation scheduled",
-                    message="Consolidation from {} to {} has been scheduled "
-                    "successfully.".format(paths, dest),
+                    message=_("Files are now being moved to {}. You will be "
+                    "notified when move is complete.").format(dest),
                     redirect_url=i18n_url('dashboard:main'),
                     redirect_target=_("Dashboard"))
 
