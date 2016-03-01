@@ -19,8 +19,8 @@ def success_notification(supervisor, db, paths, dest):
     supervisor.exts.notifications.send(
         # Translators, notification is displayed while files are being moved to
         # external storage
-        _('Disk consolidation from {} to {} completed '
-          'successfully.'.format(paths, dest)),
+        _('Disk consolidation from {} to {} completed successfully.'.format(
+            paths, dest)),
         category='consolidate_storage',
         dismissable=True,
         group='superuser',
@@ -73,9 +73,10 @@ def schedule_consolidate():
     for p in paths:
         total_size += supervisor.exts.fsal.get_path_size(p)
     if total_size > free_space:
-        return {'error':
-                    "Not enough free space. {} was free, needed {}".format(
-                    free_space, total_size)}
+        return {
+            'error': "Not enough free space. {} was free, needed {}".format(
+                free_space, total_size)
+        }
 
     supervisor.exts.tasks.schedule(consolidate,
                                    args=(supervisor, paths, dest),
@@ -92,5 +93,6 @@ def schedule_consolidate():
 
 def routes(app):
     return (
-            ('disk:consolidate', schedule_consolidate, 'POST', '/consolidate/dashboard/', {}),
-           )
+        ('disk:consolidate', schedule_consolidate,
+         'POST', '/consolidate/dashboard/', {}),
+    )
