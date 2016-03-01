@@ -7,22 +7,28 @@ from bottle_utils.i18n import i18n_url, lazy_gettext as _
 gettext = lambda x: x
 
 
-def success_notification(supervisor, db, paths, dest):
-    supervisor.exts.notifications.send(
-        # Translators, notification is displayed while files are being moved to
-        # external storage
-        gettext('Files were successfully moved to {} completed '
-                 'successfully.'.format(dest)),
-        category='consolidate_storage',
-        dismissable=True,
-        group='superuser',
-        db=db)
+# Translators, notification displayed if files were moved to
+# external storage successfully
+CONSOLIDATE_SUCCESS = 'Files were successfully moved to {storage_name}'
+
+# Translators, notification displayed if moving files to
+# external storage failed
+CONSOLIDATE_FAILURE = 'Failure in moving files to {storage_name}'
 
 
-def notification(supervisor, db, message):
+def get_storage_name(storage):
+    name = storage.name
+    is_loop = name and name.startswith('loop')
+    disk = storage.disk
+    if is_loop:
+        name = 'Virtual disk'
+    elif disk.vendor or disk.model:
+        name = '{} {}'.format(disk.vendor or '', disk.model or '')
+    return name
+
+
+def consolidation_notify(supervisor, db, message):
     supervisor.exts.notifications.send(
-        # Translators, notification is displayed while files are being moved to
-        # external storage
         gettext(message),
         category='consolidate_storage',
         dismissable=True,
@@ -30,14 +36,15 @@ def notification(supervisor, db, message):
         db=db)
 
 
-def consolidate(supervisor, paths, dest):
+def consolidate(supervisor, paths, dest, storage_name):
     db = supervisor.exts.databases.notifications
     success, message = supervisor.exts.fsal.consolidate(paths, dest)
     supervisor.exts.notifications.delete_by_category('consolidate_storage', db)
     if success:
-        success_notification(supervisor, db, paths, dest)
+        message = gettext(CONSOLIDATE_SUCCESS).format(storage_name=storage_name)
     else:
-        notification(supervisor, db, message)
+        message = gettext(CONSOLIDATE_FAILURE).format(storage_name=storage_name)
+    consolidation_notify(supervisor, db, message)
 
 
 def schedule_consolidate():
@@ -58,11 +65,11 @@ def schedule_consolidate():
         total_size += supervisor.exts.fsal.get_path_size(p)
     if total_size > free_space:
         return {
-            'error': _("Not enough free space. {} needed.").format(total_size)
+            'error': _("Not enough free space. {} bytes needed.").format(total_size)
         }
-
+    dest_name = get_storage_name(dest_drive)
     supervisor.exts.tasks.schedule(consolidate,
-                                   args=(supervisor, paths, dest),
+                                   args=(supervisor, paths, dest, dest_name),
                                    delay=0,
                                    periodic=False)
 
