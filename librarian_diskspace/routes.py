@@ -23,7 +23,7 @@ def notification(supervisor, db, message):
     supervisor.exts.notifications.send(
         # Translators, notification is displayed while files are being moved to
         # external storage
-        _(message),
+        gettext(message),
         category='consolidate_storage',
         dismissable=True,
         group='superuser',
