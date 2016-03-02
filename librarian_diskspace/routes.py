@@ -106,7 +106,6 @@ def schedule_consolidate(storages):
     src_drives = []
     dest_drive = None
     for s in storages:
-        print(dest_uuid, s, s.uuid)
         if s.uuid == dest_uuid:
             dest_drive = s
         else:
@@ -120,6 +119,14 @@ def schedule_consolidate(storages):
                                   'reattach the drive and retry.')
         return response_ctx
 
+    if not src_drives:
+        # Translators, error message shown when moving files to a storage
+        # device where no other storage devices are present other than the
+        # target device.
+        response_ctx['error'] = _('There are no other drives to move files '
+                                  'from.')
+        return response_ctx
+
     dest_name = get_storage_name(dest_drive)
     dest = dest_drive.base_path
     free_space = dest_drive.stat.free
@@ -130,7 +137,13 @@ def schedule_consolidate(storages):
     for p in paths:
         total_size += supervisor.exts.fsal.get_path_size(p)
 
-    if total_size > free_space:
+    if total_size <= 0:
+        # Translators, error message shown when moving files to a storage
+        # device, where no movable files are present.
+        response_ctx['error'] = _('There are no files to be moved.')
+        return response_ctx
+
+    if not free_space or total_size > free_space:
         # Not enough space on target drive
         response_ctx['error'] = _(
             "Not enough free space. {size} needed.").format(
