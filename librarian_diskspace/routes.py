@@ -1,8 +1,9 @@
-from .storage import get_content_storages
-from librarian_core.contrib.templates.renderer import view, template
-
 from bottle import request
 from bottle_utils.i18n import i18n_url, lazy_gettext as _
+
+from librarian_core.contrib.templates.renderer import view, template
+
+from .storage import get_content_storages
 
 gettext = lambda x: x
 
