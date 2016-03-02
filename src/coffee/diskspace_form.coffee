@@ -1,30 +1,47 @@
-((window, $) ->
-  diskForm = $ '.form'
+((window, $, templates) ->
+
+  diskFormContainer = $ '#dashboard-diskspace-panel'
+  section = diskFormContainer.parents '.o-collapsible-section'
+  diskForm = diskFormContainer.find 'form'
   url = diskForm.attr 'action'
+  errorMessage = templates.diskspaceConsolidateSubmitError
+  uuidField = null
 
 
-  submitData = (t, data) ->
-    uuid = data.consolidate
-    res = $.post url, data
-    res.done (data) ->
-      resData = $.parseJSON res.responseText
-      if resData.error
-        message = resData.error
-      else
-        message = resData.success
-      t.html "<p class='consolidate o-form-error'>" + message + "</p>"
-
-    res.fail () ->
-      message = "Critical failure, see librarian log for the traceback"
-      t.html "<p class='consolidate o-form-error'>" + message + "</p>"
+  addUuidField = () ->
+    # AJAX submission cannot submit different values based on what submit
+    # button is clicked. We would work around this by submitting to an iframe,
+    # but that doesn't sounds so good. Instead, we will add a hidden field that
+    # will hold the value we want to submit.
+    field = $ '<input type="hidden" name="uuid">'
+    diskForm.append field
+    return field
 
 
-  diskForm.on 'submit', (e) ->
-    t = $ this
+  submitData = (e) ->
     e.preventDefault()
-    uuid = t.attr 'id'
-    data = t.serialize()
-    submitData t, {'consolidate': uuid}
+    res = $.post url, diskForm.serialize()
+    res.done (data) ->
+      diskFormContainer.html data
+      return
+    res.fail () ->
+      diskFormContainer.prepend errorMessage
+      return
+    res.always () ->
+      section.trigger 'remax'
+      return
+    return
 
 
-) this, this.jQuery
+  handleButton = (e) ->
+    el = $ e.target
+    uuid = el.attr 'value'
+    uuidField.val uuid
+    return
+
+  uuidField = addUuidField()
+  diskFormContainer.on 'click', 'button', handleButton
+  diskFormContainer.on 'submit', 'form', submitData
+
+
+) this, this.jQuery, this.templates

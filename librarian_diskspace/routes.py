@@ -166,15 +166,20 @@ def schedule_consolidate(storages):
     # Cache the task id so it can be looked up later
     cache.set('consolidate_task_id', task_id)
 
+    message = _('Files are now being moved to {destination}. You will be '
+                'notified when the operation is finished.').format(
+                    destination=dest)
+
+    if request.is_xhr:
+        response_ctx['message'] = message
+        return response_ctx
+
     return template('ui/feedback',
                     status='success',
                     page_title="File consolidation scheduled",
-                    message=_(
-                        'Files are now being moved to {destination}. '
-                        'You will be notified when move is complete.').format(
-                            destination=dest),
+                    message=message,
                     redirect_url=i18n_url('dashboard:main'),
-                    redirect_target=_("Dashboard"))
+                    redirect_target=_("settings"))
 
 
 def routes(app):
