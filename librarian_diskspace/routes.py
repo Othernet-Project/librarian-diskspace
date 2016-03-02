@@ -35,12 +35,13 @@ def get_storage_name(storage):
     return name
 
 
-def consolidation_notify(supervisor, db, message):
+def consolidation_notify(supervisor, db, message, priority):
     supervisor.exts.notifications.send(
         message,
         category='consolidate_storage',
         dismissable=True,
         group='superuser',
+        priority=priority,
         db=db)
 
 
@@ -53,10 +54,12 @@ def consolidate(supervisor, paths, dest, storage_name):
     if success:
         logging.info('Consolidating to %s finished', dest)
         message = CONSOLIDATE_SUCCESS.format(storage_name=storage_name)
+        priority = supervisor.exts.notifications.NORMAL
     else:
         logging.error('Consolidating to %s failed', dest)
         message = CONSOLIDATE_FAILURE.format(storage_name=storage_name)
-    consolidation_notify(supervisor, db, message)
+        priority = supervisor.exts.notifications.URGENT
+    consolidation_notify(supervisor, db, message, priority)
     cache.delete('consolidate_task_id')
 
 
@@ -94,12 +97,12 @@ def schedule_consolidate(storages):
     task_id = cache.get('consolidate_task_id')
     if task_id:
         # There is already a task running, so we can't schedule another one
-        response_ctx.update({
-            # Translators, error message shown when moving of files is
-            # attempted while another move task is already running.
-            'error': _('A scheduled move is already running. You will be '
-                       'notified when it finishes. Please try again '
-                       'once the current operation is finished.')})
+        # Translators, error message shown when moving of files is
+        # attempted while another move task is already running.
+        response_ctx['error'] = _('A scheduled move is already running. You '
+                                  'will be notified when it finishes. Please '
+                                  'try again once the current operation is '
+                                  'finished.')
         return response_ctx
 
     # Get source and detinations drives
@@ -135,7 +138,13 @@ def schedule_consolidate(storages):
 
     # Calculate total size of all files in all source base paths
     for p in paths:
-        total_size += supervisor.exts.fsal.get_path_size(p)
+        success, size = supervisor.exts.fsal.get_path_size(p)
+        if not success:
+            response_ctx['error'] = _('Could not calculate file sizes due '
+                                      'to disk error. Please check your '
+                                      'storage device and try again.')
+            return response_ctx
+        total_size += size
 
     if total_size <= 0:
         # Translators, error message shown when moving files to a storage
