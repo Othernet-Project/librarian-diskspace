@@ -1,20 +1,27 @@
-/* line 2, ../../../src/scss/dashboard_diskspace.scss */
+/**
+ * This module contains base variables that are used to re-skin (customize) the 
+ * Librarian UI toolkit.
+ *
+ * Recommended way to customize the variables is to load a separate module 
+ * containing customized values _before_ this module.
+ */
+/* line 5, ../../../src/scss/dashboard_diskspace.scss */
 .diskspace-storageinfo .storage-detail {
   display: block;
   margin-left: 4rem;
   margin-bottom: 0.3rem;
 }
-/* line 8, ../../../src/scss/dashboard_diskspace.scss */
+/* line 11, ../../../src/scss/dashboard_diskspace.scss */
 .diskspace-storageinfo .storage-name {
   text-transform: uppercase;
 }
-/* line 13, ../../../src/scss/dashboard_diskspace.scss */
+/* line 16, ../../../src/scss/dashboard_diskspace.scss */
 .diskspace-storageinfo .storage-type {
   font-style: italic;
   font-size: 90%;
   margin-bottom: 0.5rem;
 }
-/* line 22, ../../../src/scss/dashboard_diskspace.scss */
+/* line 25, ../../../src/scss/dashboard_diskspace.scss */
 .diskspace-storageinfo .storage-icon {
   font-size: 300%;
   line-height: 75%;
@@ -22,13 +29,26 @@
   margin-right: 1rem;
   vertical-align: top;
 }
-/* line 33, ../../../src/scss/dashboard_diskspace.scss */
+/* line 36, ../../../src/scss/dashboard_diskspace.scss */
 .diskspace-storageinfo .diskspace-consolidate {
   margin-top: 0.3rem;
   margin-bottom: 2rem;
 }
 
-/* line 39, ../../../src/scss/dashboard_diskspace.scss */
+/* line 42, ../../../src/scss/dashboard_diskspace.scss */
 .diskspace-consolidate-instructions {
   margin-bottom: 2rem;
+}
+
+/* line 46, ../../../src/scss/dashboard_diskspace.scss */
+.diskspace-consolidation-started {
+  border-color: #5d7b0a;
+  background: #5d7b0a;
+  color: #fff;
+}
+/* line 51, ../../../src/scss/dashboard_diskspace.scss */
+.diskspace-consolidation-started:hover {
+  border-color: #5d7b0a;
+  background: #5d7b0a;
+  color: #fff;
 }

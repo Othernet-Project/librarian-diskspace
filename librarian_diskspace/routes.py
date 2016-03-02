@@ -12,6 +12,7 @@ from .storage import get_content_storages
 
 gettext = lambda x: x
 
+CONSOLIDATE_KEY = 'consolidate_task_id'
 
 # Translators, notification displayed if files were moved to
 # external storage successfully
@@ -60,7 +61,7 @@ def consolidate(supervisor, paths, dest, storage_name):
         message = CONSOLIDATE_FAILURE.format(storage_name=storage_name)
         priority = supervisor.exts.notifications.URGENT
     consolidation_notify(supervisor, db, message, priority)
-    cache.delete('consolidate_task_id')
+    cache.delete(CONSOLIDATE_KEY)
 
 
 def with_storages(fn):
@@ -72,10 +73,18 @@ def with_storages(fn):
     return wrapper
 
 
+def consolidate_state():
+    tasks = request.app.supervisor.exts.tasks
+    task_id = request.app.supervisor.exts.cache.get(CONSOLIDATE_KEY)
+    if not task_id:
+        return dict(state=tasks.NOT_FOUND)
+    return dict(state=tasks.get_status(task_id))
+
+
 @view('diskspace/consolidate.tpl')
 @with_storages
 def show_consolidate_form(storages):
-    return dict(found_storages=storages)
+    return dict(found_storages=storages, state=consolidate_state())
 
 
 @roca_view('diskspace/consolidate.tpl', 'diskspace/_consolidate_form.tpl',
@@ -92,6 +101,7 @@ def schedule_consolidate(storages):
     response_ctx = {
         'found_storages': storages,
         'uuid': dest_uuid,
+        'state': consolidate_state(),
     }
 
     task_id = cache.get('consolidate_task_id')
@@ -164,7 +174,7 @@ def schedule_consolidate(storages):
                              delay=0,
                              periodic=False)
     # Cache the task id so it can be looked up later
-    cache.set('consolidate_task_id', task_id)
+    cache.set(CONSOLIDATE_KEY, task_id)
 
     message = _('Files are now being moved to {destination}. You will be '
                 'notified when the operation is finished.').format(
@@ -188,4 +198,6 @@ def routes(app):
          'GET', '/diskspace/consolidate/', {}),
         ('diskspace:consolidate', schedule_consolidate,
          'POST', '/diskspace/consolidate/', {}),
+        ('diskspace:consolidate_state', consolidate_state,
+         'GET', '/diskspace/consolidate/state', {})
     )

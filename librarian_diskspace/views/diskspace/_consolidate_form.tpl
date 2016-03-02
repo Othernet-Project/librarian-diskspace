@@ -3,8 +3,11 @@
 
 <%def name="button(disk_uuid)">
     <p class="diskspace-consolidate">
-        ## Translators, this is used as a button to move all data to that drive
-        <button type="submit"${' class="error"' if error and disk_uuid == action_uuid else ''} name="uuid" value="${disk_uuid}">${_('Move files here')}</button>
+        <button id="${disk_uuid}" type="submit"${' class="error"' if error and disk_uuid == action_uuid else ''} name="uuid" value="${disk_uuid}">
+            <span class="icon icon-folder-right"></span>
+            ## Translators, this is used as a button to move all data to that drive
+            <span>${_('Move files here')}</span>
+        </button>
     </p>
 </%def>
 
@@ -62,6 +65,10 @@
     </span>
 </%def>
 
+% if state in ['QUEUED', 'PROCESSING']:
+    ${forms.form_message(_('There are move opertations in progress.'))}
+% endif
+
 % if message:
     ${forms.form_message(message)}
 % endif
@@ -70,7 +77,7 @@
     ${forms.form_errors([error])}
 % endif
 
-<form action="${i18n_url('diskspace:consolidate')}" method="POST">
+<form action="${i18n_url('diskspace:consolidate')}" method="POST" data-state-url="${i18n_url('diskspace:consolidate_state')}">
     % for storage in found_storages:
         <div class="diskspace-storageinfo">
             ${self.storage_info(storage)}
