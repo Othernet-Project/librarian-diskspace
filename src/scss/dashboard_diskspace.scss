@@ -1,5 +1,4 @@
 .diskspace-storageinfo {
-
   .storage-detail {
     display: block;
     margin-left: 4rem;
@@ -31,8 +30,12 @@
     vertical-align: top;
   }
 
-  .consolidate {
+  .diskspace-consolidate {
     margin-top: 0.3rem;
-    margin-bottom: 1.0rem;
+    margin-bottom: 2rem;
   }
+}
+
+.diskspace-consolidate-instructions {
+  margin-bottom: 2rem;
 }
