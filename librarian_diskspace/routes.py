@@ -9,11 +9,13 @@ gettext = lambda x: x
 
 # Translators, notification displayed if files were moved to
 # external storage successfully
-CONSOLIDATE_SUCCESS = 'Files were successfully moved to {storage_name}'
+CONSOLIDATE_SUCCESS = gettext('Files were successfully moved to '
+                              '{storage_name}')
 
 # Translators, notification displayed if moving files to
 # external storage failed
-CONSOLIDATE_FAILURE = 'Failure in moving files to {storage_name}'
+CONSOLIDATE_FAILURE = gettext('Files could not be moved to '
+                              '{storage_name}')
 
 
 def get_storage_name(storage):
