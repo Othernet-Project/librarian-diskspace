@@ -5,12 +5,9 @@
   diskForm = diskFormContainer.find 'form'
   url = diskForm.attr 'action'
   stateUrl = diskForm.data 'state-url'
+  currentUuid = diskForm.data 'started'
   errorMessage = templates.diskspaceConsolidateSubmitError
   uuidField = null
-
-  NOT_STARTED = 0
-  IN_PROGRESS = 1
-  FINISHED = 2
 
   # statePoller is a FSM which polls the consolidate task state and updates the
   # UI accordingly
@@ -35,7 +32,7 @@
       return
 
     update: (state) ->
-      if state != 'NOT_FOUND'
+      if state?
         return
       # We are finished
       @stopPolling()
@@ -67,7 +64,6 @@
       @timer = setInterval () ->
         res = $.getJSON stateUrl
         res.done (data) ->
-          console.log data, poller.currentState
           poller.update.call poller, data.state
       , 2000
 
@@ -109,6 +105,10 @@
   uuidField = addUuidField()
   diskFormContainer.on 'click', 'button', handleButton
   diskFormContainer.on 'submit', 'form', submitData
+
+  if currentUuid
+    # Cick off the spinner immediately
+    statePoller.start currentUuid
 
 
 ) this, this.jQuery, this.templates

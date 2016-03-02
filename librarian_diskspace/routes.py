@@ -6,13 +6,14 @@ from bottle_utils.ajax import roca_view
 from bottle_utils.i18n import i18n_url, lazy_gettext as _
 from bottle_utils.html import hsize
 
-from librarian_core.contrib.templates.renderer import view, template
+from librarian_core.contrib.templates.renderer import template
 
 from .storage import get_content_storages
 
 gettext = lambda x: x
 
-CONSOLIDATE_KEY = 'consolidate_task_id'
+
+CONSOLIDATE_KEY = 'consolidate_current_uuid'
 
 # Translators, notification displayed if files were moved to
 # external storage successfully
@@ -74,18 +75,15 @@ def with_storages(fn):
 
 
 def consolidate_state():
-    tasks = request.app.supervisor.exts.tasks
-    task_id = request.app.supervisor.exts.cache.get(CONSOLIDATE_KEY)
-    if not task_id:
-        return dict(state=tasks.NOT_FOUND)
-    return dict(state=tasks.get_status(task_id))
+    uuid = request.app.supervisor.exts.cache.get(CONSOLIDATE_KEY)
+    return dict(state=uuid)
 
 
 @roca_view('diskspace/consolidate.tpl', 'diskspace/_consolidate_form.tpl',
            template_func=template)
 @with_storages
 def show_consolidate_form(storages):
-    return dict(found_storages=storages, state=consolidate_state())
+    return dict(found_storages=storages, state=consolidate_state()['state'])
 
 
 @roca_view('diskspace/consolidate.tpl', 'diskspace/_consolidate_form.tpl',
@@ -102,7 +100,7 @@ def schedule_consolidate(storages):
     response_ctx = {
         'found_storages': storages,
         'uuid': dest_uuid,
-        'state': consolidate_state(),
+        'state': consolidate_state()['state'],
     }
 
     task_id = cache.get('consolidate_task_id')
@@ -170,11 +168,10 @@ def schedule_consolidate(storages):
                 size=hsize(total_size))
         return response_ctx
 
-    task_id = tasks.schedule(consolidate,
-                             args=(supervisor, paths, dest, dest_name),
-                             periodic=False)
-    # Cache the task id so it can be looked up later
-    cache.set(CONSOLIDATE_KEY, task_id)
+    tasks.schedule(consolidate,
+                   args=(supervisor, paths, dest, dest_name),
+                   periodic=False)
+    cache.set(CONSOLIDATE_KEY, dest_uuid)
 
     message = _('Files are now being moved to {destination}. You will be '
                 'notified when the operation is finished.').format(

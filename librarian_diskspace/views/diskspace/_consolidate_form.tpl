@@ -1,10 +1,20 @@
 <%namespace name="ui" file="/ui/widgets.tpl"/>
 <%namespace name="forms" file="/ui/forms.tpl"/>
 
-<%def name="button(disk_uuid)">
+<%def name="button(disk_uuid, current_uuid)">
     <p class="diskspace-consolidate">
-        <button id="${disk_uuid}" type="submit"${' class="error"' if error and disk_uuid == action_uuid else ''} name="uuid" value="${disk_uuid}">
-            <span class="icon icon-folder-right"></span>
+        <button 
+            id="${disk_uuid}" 
+            type="submit"${' class="error"' if error and disk_uuid == action_uuid else ''} 
+            name="uuid" 
+            value="${disk_uuid}"
+            ${'disabled' if current_uuid else ''}
+            ${'class="diskspace-consolidation-started"' if current_uuid == disk_uuid else ''}>
+            % if current_uuid == disk_uuid:
+                <span class="icon icon-spinning-loader"></span>
+            % else:
+                <span class="icon icon-folder-right"></span>
+            % endif
             ## Translators, this is used as a button to move all data to that drive
             <span>${_('Move files here')}</span>
         </button>
@@ -65,7 +75,7 @@
     </span>
 </%def>
 
-% if state in ['QUEUED', 'PROCESSING']:
+% if state:
     ${forms.form_message(_('There are move opertations in progress.'))}
 % endif
 
@@ -77,12 +87,12 @@
     ${forms.form_errors([error])}
 % endif
 
-<form action="${i18n_url('diskspace:consolidate')}" method="POST" data-state-url="${i18n_url('diskspace:consolidate_state')}">
+<form action="${i18n_url('diskspace:consolidate')}" method="POST" data-state-url="${i18n_url('diskspace:consolidate_state')}" data-started="${state}">
     % for storage in found_storages:
         <div class="diskspace-storageinfo">
             ${self.storage_info(storage)}
             <span class="storage-detail">
-                ${self.button(storage.uuid)}
+                ${self.button(storage.uuid, current_uuid=state)}
             </span>
         </div>
     % endfor
