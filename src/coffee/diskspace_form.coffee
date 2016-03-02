@@ -47,6 +47,10 @@
     cleanup: () ->
       @toggleButton yes
       @setIcon 'folder-right'
+      res = $.get url
+      res.done (data) ->
+        diskFormContainer.html data
+        diskForm = diskFormContainer.find 'form'
 
     stopPolling: () ->
       clearTimeout @timer

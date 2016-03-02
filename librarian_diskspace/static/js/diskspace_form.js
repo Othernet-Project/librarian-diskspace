@@ -43,8 +43,14 @@
       })(this), 7000);
     },
     cleanup: function() {
+      var res;
       this.toggleButton(true);
-      return this.setIcon('folder-right');
+      this.setIcon('folder-right');
+      res = $.get(url);
+      return res.done(function(data) {
+        diskFormContainer.html(data);
+        return diskForm = diskFormContainer.find('form');
+      });
     },
     stopPolling: function() {
       return clearTimeout(this.timer);

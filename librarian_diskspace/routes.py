@@ -81,7 +81,8 @@ def consolidate_state():
     return dict(state=tasks.get_status(task_id))
 
 
-@view('diskspace/consolidate.tpl')
+@roca_view('diskspace/consolidate.tpl', 'diskspace/_consolidate_form.tpl',
+           template_func=template)
 @with_storages
 def show_consolidate_form(storages):
     return dict(found_storages=storages, state=consolidate_state())
@@ -171,7 +172,6 @@ def schedule_consolidate(storages):
 
     task_id = tasks.schedule(consolidate,
                              args=(supervisor, paths, dest, dest_name),
-                             delay=0,
                              periodic=False)
     # Cache the task id so it can be looked up later
     cache.set(CONSOLIDATE_KEY, task_id)
