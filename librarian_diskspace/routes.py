@@ -1,3 +1,5 @@
+import logging
+
 from bottle import request
 from bottle_utils.i18n import i18n_url, lazy_gettext as _
 
@@ -40,13 +42,16 @@ def consolidation_notify(supervisor, db, message):
 
 
 def consolidate(supervisor, paths, dest, storage_name):
+    logging.info('Started consolidating to %s', dest)
     db = supervisor.exts.databases.notifications
     success, message = supervisor.exts.fsal.consolidate(paths, dest)
     supervisor.exts.notifications.delete_by_category('consolidate_storage', db)
     if success:
-        message = gettext(CONSOLIDATE_SUCCESS).format(storage_name=storage_name)
+        logging.info('Consolidating to %s finished', dest)
+        message = CONSOLIDATE_SUCCESS.format(storage_name=storage_name)
     else:
-        message = gettext(CONSOLIDATE_FAILURE).format(storage_name=storage_name)
+        logging.error('Consolidating to %s failed', dest)
+        message = CONSOLIDATE_FAILURE.format(storage_name=storage_name)
     consolidation_notify(supervisor, db, message)
 
 
