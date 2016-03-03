@@ -50,7 +50,6 @@
           pollState(uuid);
           return;
         }
-        console.log('done');
         markDone(uuid);
       });
     }, 2000);

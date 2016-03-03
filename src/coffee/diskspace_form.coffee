@@ -56,7 +56,6 @@
           reloadForm()
           pollState uuid
           return
-        console.log 'done'
         markDone uuid
         return
     , 2000
