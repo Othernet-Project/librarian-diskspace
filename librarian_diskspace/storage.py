@@ -21,8 +21,6 @@ def iterpath(path):
     Last item returned is always the root.
     """
     path = os.path.abspath(path)
-    yield path
-    path = os.path.dirname(path)
     while path != '/':
         yield path
         path = os.path.dirname(path)
