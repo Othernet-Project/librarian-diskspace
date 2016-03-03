@@ -83,7 +83,7 @@
     ${forms.form_errors([error])}
 % endif
 
-<form action="${i18n_url('diskspace:consolidate')}" method="POST" data-state-url="${i18n_url('diskspace:consolidate_state')}" data-started="${state}">
+<form action="${i18n_url('diskspace:consolidate')}" method="POST" data-state-url="${i18n_url('diskspace:consolidate_state')}" data-started="${state or ''}">
     % for storage in found_storages:
         <div class="diskspace-storageinfo">
             ${self.storage_info(storage)}

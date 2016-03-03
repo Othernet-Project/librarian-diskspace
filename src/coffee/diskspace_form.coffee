@@ -9,64 +9,6 @@
   errorMessage = templates.diskspaceConsolidateSubmitError
   uuidField = null
 
-  # statePoller is a FSM which polls the consolidate task state and updates the
-  # UI accordingly
-  statePoller =
-    buttonId: null
-    timer: null
-    buttton: null
-
-    getButton: () ->
-      @button ?= diskFormContainer.find "##{@buttonId}"
-
-    toggleButton: (toggle) ->
-      button = @getButton()
-      button.toggleClass 'diskspace-consolidation-started', not toggle
-      button.prop 'disabled', not toggle
-      return
-
-    setIcon: (iconName) ->
-      button = @getButton()
-      (button.find '.icon').remove()
-      button.prepend "<span class=\"icon icon-#{iconName}\"></span>"
-      return
-
-    update: (state) ->
-      if state?
-        return
-      # We are finished
-      @stopPolling()
-      @setIcon 'ok'
-      setTimeout () =>
-        @cleanup()
-      , 7000
-
-    cleanup: () ->
-      @toggleButton yes
-      @setIcon 'folder-right'
-      res = $.get url
-      res.done (data) ->
-        diskFormContainer.html data
-        diskForm = diskFormContainer.find 'form'
-
-    stopPolling: () ->
-      clearTimeout @timer
-
-    start: (@buttonId) ->
-      @toggleButton no
-      @setIcon 'spinning-loader'
-      setTimeout () =>
-        @startPolling()
-      , 2000
-
-    startPolling: () ->
-      poller = this
-      @timer = setInterval () ->
-        res = $.getJSON stateUrl
-        res.done (data) ->
-          poller.update.call poller, data.state
-      , 2000
-
 
   addUuidField = () ->
     # AJAX submission cannot submit different values based on what submit
@@ -74,24 +16,59 @@
     # but that doesn't sounds so good. Instead, we will add a hidden field that
     # will hold the value we want to submit.
     field = $ '<input type="hidden" name="uuid">'
-    diskForm.append field
+    (diskFormContainer.find 'form').append field
     return field
+
+
+  updateForm = (markup) ->
+    diskFormContainer.html markup
+    diskForm = diskFormContainer.find 'form'
+    uuidField = addUuidField()
+    section.trigger 'remax'
+    return
+
+
+  reloadForm = () ->
+    res = $.get url
+    res.done updateForm
+
+
+  setIcon = (button, name) ->
+    (button.find '.icon').remove()
+    button.prepend "<span class=\"icon icon-#{name}\"></span>"
+
+
+  markDone = (uuid) ->
+    button = diskFormContainer.find '#' + uuid
+    setIcon button, 'ok'
+    button.prop 'disabled', false
+    setTimeout () ->
+      setIcon button, 'folder-right'
+
+
+  pollState = (uuid) ->
+    setTimeout () ->
+      res = $.get stateUrl
+      res.done (data) ->
+        if data.state?
+          pollState uuid
+          return
+        markDone uuid
+      res.always reloadForm
+    , 2000
 
 
   submitData = (e) ->
     e.preventDefault()
     res = $.post url, diskForm.serialize()
     res.done (data) ->
-      diskFormContainer.html data
+      updateForm data
       if (diskFormContainer.find '.o-form-errors').length
         return
-      statePoller.start uuidField.val()
+      pollState()
       return
     res.fail () ->
       diskFormContainer.prepend errorMessage
-      return
-    res.always () ->
-      section.trigger 'remax'
       return
     return
 
