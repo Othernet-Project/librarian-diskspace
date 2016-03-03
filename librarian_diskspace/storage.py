@@ -24,7 +24,6 @@ def iterpath(path):
     while path != '/':
         yield path
         path = os.path.dirname(path)
-    yield path
 
 
 def find_mount_point(path):
@@ -70,8 +69,12 @@ def get_content_storages(supervisor):
     assert success, 'fsal failed to list base paths'
     storages = []
     for path in base_paths:
-        mtab_entry = find_mount_point(path)
+        try:
+            mtab_entry = find_mount_point(path)
+        except ValueError:
+            continue
         sinfo = get_storage_by_mtab_devname(mtab_entry.dev)
         if sinfo:
+            sinfo.base_path = path
             storages.append(sinfo)
     return storages

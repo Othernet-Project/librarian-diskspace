@@ -18,7 +18,8 @@ from bottle_utils.i18n import lazy_gettext as _
 from librarian_dashboard.dashboard import DashboardPlugin
 
 from . import storage
-from tasks import check_diskspace
+from .tasks import check_diskspace
+from .routes import consolidate_state
 
 
 try:
@@ -33,10 +34,11 @@ class DiskspaceDashboardPlugin(DashboardPlugin):
     name = 'diskspace'
 
     def get_template(self):
-        return 'dashboard/' + self.name
+        return self.name + '/dashboard.tpl'
 
     def get_context(self):
         supervisor = request.app.supervisor
         check_diskspace(supervisor)
         storages = storage.get_content_storages(supervisor)
-        return dict(found_storages=storages)
+        state = consolidate_state()
+        return dict(found_storages=storages, state=state['state'])
