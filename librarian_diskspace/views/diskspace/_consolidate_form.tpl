@@ -75,10 +75,6 @@
     </span>
 </%def>
 
-% if state:
-    ${forms.form_message(_('There are move opertations in progress.'))}
-% endif
-
 % if message:
     ${forms.form_message(message)}
 % endif
