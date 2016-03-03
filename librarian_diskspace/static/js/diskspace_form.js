@@ -36,8 +36,7 @@
     setIcon(button, 'ok');
     button.addClass('diskspace-consolidation-started');
     return setTimeout(function() {
-      button.removeClass('diskspace-consolidation-started');
-      return setIcon(button, 'folder-right');
+      return reloadForm();
     }, 6000);
   };
   pollState = function(uuid) {

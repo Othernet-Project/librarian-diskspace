@@ -12,11 +12,15 @@
             ${'class="diskspace-consolidation-started"' if current_uuid == disk_uuid else ''}>
             % if current_uuid == disk_uuid:
                 <span class="icon icon-spinning-loader"></span>
+                ## Translators, this is used as a button to move all data to
+                ## that drive, while files are being moved
+                <span>${_('Moving files here')}</span>
             % else:
                 <span class="icon icon-folder-right"></span>
+                ## Translators, this is used as a button to move all data to
+                ## that drive
+                <span>${_('Move files here')}</span>
             % endif
-            ## Translators, this is used as a button to move all data to that drive
-            <span>${_('Move files here')}</span>
         </button>
     </p>
 </%def>

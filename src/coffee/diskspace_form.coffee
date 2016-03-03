@@ -43,8 +43,7 @@
     setIcon button, 'ok'
     button.addClass 'diskspace-consolidation-started'
     setTimeout () ->
-      button.removeClass 'diskspace-consolidation-started'
-      setIcon button, 'folder-right'
+      reloadForm()
     , 6000
 
 
