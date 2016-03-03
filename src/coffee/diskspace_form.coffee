@@ -85,7 +85,7 @@
 
   if currentUuid
     # Cick off the spinner immediately
-    statePoller.start currentUuid
+    pollState currentUuid
 
 
 ) this, this.jQuery, this.templates

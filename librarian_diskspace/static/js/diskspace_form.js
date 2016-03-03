@@ -78,6 +78,6 @@
   diskFormContainer.on('click', 'button', handleButton);
   diskFormContainer.on('submit', 'form', submitData);
   if (currentUuid) {
-    return statePoller.start(currentUuid);
+    return pollState(currentUuid);
   }
 })(this, this.jQuery, this.templates);
