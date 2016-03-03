@@ -34,35 +34,38 @@
     var button;
     button = diskFormContainer.find('#' + uuid);
     setIcon(button, 'ok');
-    button.prop('disabled', false);
+    button.addClass('diskspace-consolidation-started');
     return setTimeout(function() {
+      button.removeClass('diskspace-consolidation-started');
       return setIcon(button, 'folder-right');
-    });
+    }, 6000);
   };
   pollState = function(uuid) {
     return setTimeout(function() {
       var res;
       res = $.get(stateUrl);
-      res.done(function(data) {
+      return res.done(function(data) {
         if (data.state != null) {
+          reloadForm();
           pollState(uuid);
           return;
         }
-        return markDone(uuid);
+        console.log('done');
+        markDone(uuid);
       });
-      return res.always(reloadForm);
     }, 2000);
   };
   submitData = function(e) {
-    var res;
+    var res, uuid;
     e.preventDefault();
     res = $.post(url, diskForm.serialize());
+    uuid = uuidField.val();
     res.done(function(data) {
       updateForm(data);
       if ((diskFormContainer.find('.o-form-errors')).length) {
         return;
       }
-      pollState();
+      pollState(uuid);
     });
     res.fail(function() {
       diskFormContainer.prepend(errorMessage);

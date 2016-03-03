@@ -41,9 +41,11 @@
   markDone = (uuid) ->
     button = diskFormContainer.find '#' + uuid
     setIcon button, 'ok'
-    button.prop 'disabled', false
+    button.addClass 'diskspace-consolidation-started'
     setTimeout () ->
+      button.removeClass 'diskspace-consolidation-started'
       setIcon button, 'folder-right'
+    , 6000
 
 
   pollState = (uuid) ->
@@ -51,21 +53,24 @@
       res = $.get stateUrl
       res.done (data) ->
         if data.state?
+          reloadForm()
           pollState uuid
           return
+        console.log 'done'
         markDone uuid
-      res.always reloadForm
+        return
     , 2000
 
 
   submitData = (e) ->
     e.preventDefault()
     res = $.post url, diskForm.serialize()
+    uuid = uuidField.val()
     res.done (data) ->
       updateForm data
       if (diskFormContainer.find '.o-form-errors').length
         return
-      pollState()
+      pollState uuid
       return
     res.fail () ->
       diskFormContainer.prepend errorMessage
