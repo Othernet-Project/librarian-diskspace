@@ -13,7 +13,7 @@ from .storage import get_content_storages
 gettext = lambda x: x
 
 
-CONSOLIDATE_KEY = 'consolidate_current_uuid'
+CONSOLIDATE_KEY = 'consolidate_current_id'
 
 # Translators, notification displayed if files were moved to
 # external storage successfully
@@ -75,32 +75,31 @@ def with_storages(fn):
 
 
 def consolidate_state():
-    uuid = request.app.supervisor.exts.cache.get(CONSOLIDATE_KEY)
-    return dict(state=uuid)
+    return {'disk_id': request.app.supervisor.exts.cache.get(CONSOLIDATE_KEY)}
 
 
 @roca_view('diskspace/consolidate.tpl', 'diskspace/_consolidate_form.tpl',
            template_func=template)
 @with_storages
 def show_consolidate_form(storages):
-    return dict(found_storages=storages, state=consolidate_state()['state'])
+    return dict(found_storages=storages, state=consolidate_state())
 
 
 @roca_view('diskspace/consolidate.tpl', 'diskspace/_consolidate_form.tpl',
            template_func=template)
 @with_storages
 def schedule_consolidate(storages):
-    """ Gets a UUID from request context, gathers a list of all drives and
-    moves content from all other drives to the drive with matching UUID """
+    """ Gets a ID from request context, gathers a list of all drives and
+    moves content from all other drives to the drive with matching ID """
     supervisor = request.app.supervisor
     tasks = supervisor.exts.tasks
     cache = supervisor.exts.cache
-    dest_uuid = request.params.uuid
+    dest_id = request.params.disk_id
 
     response_ctx = {
         'found_storages': storages,
-        'uuid': dest_uuid,
-        'state': consolidate_state()['state'],
+        'disk_id': dest_id,
+        'state': consolidate_state(),
     }
 
     task_id = cache.get('consolidate_task_id')
@@ -118,7 +117,7 @@ def schedule_consolidate(storages):
     src_drives = []
     dest_drive = None
     for s in storages:
-        if s.uuid == dest_uuid:
+        if s.name == dest_id:
             dest_drive = s
         else:
             src_drives.append(s)
@@ -171,7 +170,7 @@ def schedule_consolidate(storages):
     tasks.schedule(consolidate,
                    args=(supervisor, paths, dest, dest_name),
                    periodic=False)
-    cache.set(CONSOLIDATE_KEY, dest_uuid)
+    cache.set(CONSOLIDATE_KEY, dest_id)
 
     message = _('Files are now being moved to {destination}. You will be '
                 'notified when the operation is finished.').format(

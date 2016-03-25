@@ -2,6 +2,7 @@ from . import storage
 
 # FIXME: The notifications messages need to be translatable
 
+
 def send_storage_notification(supervisor, db):
     supervisor.exts.notifications.send(
         'Storage space is getting low. Please ask the administrator to take '

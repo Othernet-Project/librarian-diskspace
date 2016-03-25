@@ -41,4 +41,4 @@ class DiskspaceDashboardPlugin(DashboardPlugin):
         check_diskspace(supervisor)
         storages = storage.get_content_storages(supervisor)
         state = consolidate_state()
-        return dict(found_storages=storages, state=state['state'])
+        return dict(found_storages=storages, state=state)

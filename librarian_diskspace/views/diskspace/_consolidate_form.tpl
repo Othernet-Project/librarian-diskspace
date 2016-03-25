@@ -1,26 +1,36 @@
 <%namespace name="ui" file="/ui/widgets.tpl"/>
 <%namespace name="forms" file="/ui/forms.tpl"/>
 
-<%def name="button(disk_uuid, current_uuid)">
+<%def name="button(disk_id, current_id)">
+    <% 
+        is_current = current_id == disk_id
+        is_active = action_id == disk_id
+        cls = None
+        if error and is_active:
+            cls = 'error'
+        elif is_current:
+            cls = 'diskspace-consolidation-started'
+        if is_curent:
+            icon = 'spinning-loader'
+            # Translators, this is used as a button to move all data to that
+            # drive, while files are being moved
+            label = _('Moving files here')
+        else:
+            icon = 'folder-right'
+            # Translators, this is used as a button to move all data to that 
+            # drive
+            label = _('Move files here')
+    %>
     <p class="diskspace-consolidate">
         <button 
-            id="${disk_uuid}" 
-            type="submit"${' class="error"' if error and disk_uuid == action_uuid else ''} 
-            name="uuid" 
-            value="${disk_uuid}"
-            ${'disabled' if current_uuid else ''}
-            ${'class="diskspace-consolidation-started"' if current_uuid == disk_uuid else ''}>
-            % if current_uuid == disk_uuid:
-                <span class="icon icon-spinning-loader"></span>
-                ## Translators, this is used as a button to move all data to
-                ## that drive, while files are being moved
-                <span>${_('Moving files here')}</span>
-            % else:
-                <span class="icon icon-folder-right"></span>
-                ## Translators, this is used as a button to move all data to
-                ## that drive
-                <span>${_('Move files here')}</span>
-            % endif
+            id="${disk_id}" 
+            type="submit"
+            name="disk_id" 
+            value="${disk_id}"
+            ${'disabled' if current_id else ''}
+            ${'class="{}"'.format(cls) if cls else ''}>
+            <span class="icon icon-${icon}"></span>
+            <span>${label}</span>
         </button>
     </p>
 </%def>
@@ -87,12 +97,12 @@
     ${forms.form_errors([error])}
 % endif
 
-<form action="${i18n_url('diskspace:consolidate')}" method="POST" data-state-url="${i18n_url('diskspace:consolidate_state')}" data-started="${state or ''}">
+<form action="${i18n_url('diskspace:consolidate')}" method="POST" data-state-url="${i18n_url('diskspace:consolidate_state')}" data-started="${state['disk_id'] or ''}">
     % for storage in found_storages:
         <div class="diskspace-storageinfo">
             ${self.storage_info(storage)}
             <span class="storage-detail">
-                ${self.button(storage.uuid, current_uuid=state)}
+                ${self.button(storage.name, current_id=state)}
             </span>
         </div>
     % endfor

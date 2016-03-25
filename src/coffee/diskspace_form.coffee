@@ -5,17 +5,17 @@
   diskForm = diskFormContainer.find 'form'
   url = diskForm.attr 'action'
   stateUrl = diskForm.data 'state-url'
-  currentUuid = diskForm.data 'started'
+  currentId = diskForm.data 'started'
   errorMessage = templates.diskspaceConsolidateSubmitError
-  uuidField = null
+  diskField = null
 
 
-  addUuidField = () ->
+  addDiskField = () ->
     # AJAX submission cannot submit different values based on what submit
     # button is clicked. We would work around this by submitting to an iframe,
     # but that doesn't sounds so good. Instead, we will add a hidden field that
     # will hold the value we want to submit.
-    field = $ '<input type="hidden" name="uuid">'
+    field = $ '<input type="hidden" name="disk_id">'
     (diskFormContainer.find 'form').append field
     return field
 
@@ -23,7 +23,7 @@
   updateForm = (markup) ->
     diskFormContainer.html markup
     diskForm = diskFormContainer.find 'form'
-    uuidField = addUuidField()
+    diskField = addDiskField()
     section.trigger 'remax'
     return
 
@@ -38,8 +38,8 @@
     button.prepend "<span class=\"icon icon-#{name}\"></span>"
 
 
-  markDone = (uuid) ->
-    button = diskFormContainer.find '#' + uuid
+  markDone = (diskId) ->
+    button = diskFormContainer.find '#' + diskId
     setIcon button, 'ok'
     button.addClass 'diskspace-consolidation-started'
     setTimeout () ->
@@ -47,15 +47,15 @@
     , 6000
 
 
-  pollState = (uuid) ->
+  pollState = (diskField) ->
     setTimeout () ->
       res = $.get stateUrl
       res.done (data) ->
         if data.state?
           reloadForm()
-          pollState uuid
+          pollState diskField
           return
-        markDone uuid
+        markDone diskField
         return
     , 2000
 
@@ -63,12 +63,12 @@
   submitData = (e) ->
     e.preventDefault()
     res = $.post url, diskForm.serialize()
-    uuid = uuidField.val()
+    diskId = diskField.val()
     res.done (data) ->
       updateForm data
       if (diskFormContainer.find '.o-form-errors').length
         return
-      pollState uuid
+      pollState diskField
       return
     res.fail () ->
       diskFormContainer.prepend errorMessage
@@ -78,17 +78,17 @@
 
   handleButton = (e) ->
     el = $ e.target
-    uuid = el.attr 'value'
-    uuidField.val uuid
+    diskId = el.attr 'value'
+    diskField.val diskId
     return
 
-  uuidField = addUuidField()
+  diskField = addDiskField()
   diskFormContainer.on 'click', 'button', handleButton
   diskFormContainer.on 'submit', 'form', submitData
 
-  if currentUuid
+  if currentId
     # Cick off the spinner immediately
-    pollState currentUuid
+    pollState currentId
 
 
 ) this, this.jQuery, this.templates
