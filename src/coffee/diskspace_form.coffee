@@ -47,15 +47,15 @@
     , 6000
 
 
-  pollState = (diskField) ->
+  pollState = (storageId) ->
     setTimeout () ->
       res = $.get stateUrl
       res.done (data) ->
         if data.active?
           reloadForm()
-          pollState diskField
+          pollState storageId
           return
-        markDone diskField.val()
+        markDone storageId
         return
     , 2000
 
@@ -68,7 +68,7 @@
       updateForm data
       if (diskFormContainer.find '.o-form-errors').length
         return
-      pollState diskField
+      pollState diskId
       return
     res.fail () ->
       diskFormContainer.prepend errorMessage
@@ -77,7 +77,7 @@
 
 
   handleButton = (e) ->
-    el = $ e.target
+    el = $ this
     diskId = el.attr 'value'
     diskField.val diskId
     return
@@ -88,7 +88,7 @@
 
   if currentId
     # Kick off the spinner immediately
-    pollState diskField
+    pollState currentId
 
 
 ) this, this.jQuery, this.templates

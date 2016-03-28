@@ -39,17 +39,17 @@
       return reloadForm();
     }, 6000);
   };
-  pollState = function(diskField) {
+  pollState = function(storageId) {
     return setTimeout(function() {
       var res;
       res = $.get(stateUrl);
       return res.done(function(data) {
         if (data.active != null) {
           reloadForm();
-          pollState(diskField);
+          pollState(storageId);
           return;
         }
-        markDone(diskField.val());
+        markDone(storageId);
       });
     }, 2000);
   };
@@ -63,7 +63,7 @@
       if ((diskFormContainer.find('.o-form-errors')).length) {
         return;
       }
-      pollState(diskField);
+      pollState(diskId);
     });
     res.fail(function() {
       diskFormContainer.prepend(errorMessage);
@@ -71,7 +71,7 @@
   };
   handleButton = function(e) {
     var diskId, el;
-    el = $(e.target);
+    el = $(this);
     diskId = el.attr('value');
     diskField.val(diskId);
   };
@@ -79,6 +79,6 @@
   diskFormContainer.on('click', 'button', handleButton);
   diskFormContainer.on('submit', 'form', submitData);
   if (currentId) {
-    return pollState(diskField);
+    return pollState(currentId);
   }
 })(this, this.jQuery, this.templates);
