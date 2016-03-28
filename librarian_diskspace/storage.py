@@ -9,10 +9,22 @@ file that comes with the source code, or http://www.gnu.org/licenses/gpl.txt.
 """
 
 import os
+import hashlib
 
 import pyudev
 import hwd.udev
 import hwd.storage
+
+from librarian_core.exts import ext_container as exts
+
+
+CONSOLIDATE_KEY = 'consolidate_current_id'
+
+
+def get_storage_id(path):
+    md5 = hashlib.md5()
+    md5.update(path.encode('utf8'))
+    return md5.hexdigest()[:7]
 
 
 def iterpath(path):
@@ -42,7 +54,6 @@ def find_mount_point(path):
     for p in iterpath(path):
         if p in mount_points:
             return mount_points[p]
-    raise ValueError('No mount points found in {}'.format(path))
 
 
 def get_storage_by_mtab_devname(devname):
@@ -60,21 +71,180 @@ def get_storage_by_mtab_devname(devname):
     return None
 
 
-def get_content_storages(supervisor):
+def mark_consolidate_started(storage_id):
+    exts.cache.set(CONSOLIDATE_KEY, storage_id)
+
+
+def mark_consolidate_done():
+    exts.cache.delete(CONSOLIDATE_KEY)
+
+
+def get_consoildate_status():
+    return exts.cache.get(CONSOLIDATE_KEY)
+
+
+class StorageError(Exception):
+    """ Storage-related errors """
+    def __init__(self, storage_id, message):
+        self.id = storage_id
+        self.message = message
+        super(StorageError, self).__init__('<{}> {}'.format(
+            storage_id, message))
+
+
+class NotFoundError(StorageError):
+    pass
+
+
+class NothingToMoveError(StorageError):
+    pass
+
+
+class NoMoveTargetError(StorageError):
+    pass
+
+
+class CapacityError(StorageError):
+    def __init__(self, storage_id, capacity, message):
+        self.capacity = capacity
+        super(CapacityError, self).__init__(storage_id, message)
+
+
+class StorageDir(object):
+    """
+    Encapsulates data and methods for a single storage location
+    """
+    def __init__(self, path):
+        self.path = path
+        self.id = get_storage_id(self.path)
+        self.mount = find_mount_point(path)
+        if self.mount:
+            self.dev = get_storage_by_mtab_devname(self.mount.dev)
+        else:
+            self.dev = None
+
+    @property
+    def is_loop(self):
+        return self.name and self.name.startswith('loop')
+
+    def _try_dev_attr(self, name, default=None):
+        if hasattr(self.dev, name):
+            return getattr(self.dev, name)
+        if hasattr(self.dev.disk, name):
+            return getattr(self.dev.disk, name)
+        return default
+
+    @property
+    def is_removable(self):
+        return self._try_dev_attr('is_removable', False)
+
+    @property
+    def bus(self):
+        return self._try_dev_attr('bus')
+
+    @property
+    def humanized_name(self):
+        name = self.name
+        vendor = self.dev.vendor
+        model = self.dev.model
+        if self.is_loop:
+            name = 'Virtual disk'
+        elif vendor or model:
+            name = '{} {}'.format(vendor or '', model or '').strip()
+        return name
+
+    @property
+    def name(self):
+        return self.dev.name
+
+    @property
+    def total_content_size(self):
+        success, size = exts.fsal.get_path_size(self.path)
+        if not success:
+            raise StorageError(self.id, 'Could not get content size')
+        return size
+
+    @property
+    def stat(self):
+        return self.dev.stat
+
+    @property
+    def free_space(self):
+        return self.stat.free
+
+
+class Storages(list):
+    def __init__(self, paths, ignore_nonexistent=False):
+        super(Storages, self).__init__()
+        self.lut = {}
+        for p in paths:
+            s = StorageDir(p)
+            if not s.dev:
+                if ignore_nonexistent:
+                    continue
+                raise NotFoundError(s.path, 'No storage device at path')
+            self.append(s)
+            self.lut[s.id] = s
+
+    def get(self, storage_id):
+        if not storage_id:
+            raise NotFoundError(None, 'No storage id specified')
+        try:
+            return self.lut[storage_id]
+        except KeyError:
+            raise NotFoundError(storage_id, 'No storage device for id')
+
+    def get_all_except(self, storage_id):
+        return filter(lambda s: s.id != storage_id, self)
+
+    def test_capacity(self, storage_id):
+        target = self.get(storage_id)
+        return self.total_content_size() < target.free_space
+
+    def get_total_content_size(self, exclude=[]):
+        total = 0
+        for s in self:
+            if s.id in exclude:
+                continue
+            total += s.total_content_size
+        return total
+
+    def move_preflight(self, storage_id):
+        dest = self.get(storage_id)
+        content_size = self.get_total_content_size(exclude=[storage_id])
+        free_space = dest.free_space
+        if not len(self) > 1:
+            raise NoMoveTargetError(dest, 'No other drives to move to')
+        if not content_size:
+            raise NothingToMoveError(dest, 'No content to be moved')
+        if free_space < content_size:
+            raise CapacityError(dest, content_size,
+                                'Not enoguh space on target')
+        return dest
+
+    def move_content_to(self, storage_id, pre_start=lambda: True,
+                        success_cb=lambda d: True,
+                        failure_cb=lambda d: True):
+        try:
+            source = self.get(storage_id)
+        except NotFoundError:
+            failure_cb(None)
+        dest_path = source.path
+        paths = (s.path for s in self.get_all_except(storage_id))
+        pre_start()
+        success, message = exts.fsal.consolidate(paths, dest_path)
+        if success:
+            success_cb(source)
+        else:
+            failure_cb(source)
+        mark_consolidate_done()
+
+
+def get_content_storages():
     """
     Return a mountable device object matching a storage device used to house
     the content directory.
     """
-    success, base_paths = supervisor.exts.fsal.list_base_paths()
+    success, base_paths = exts.fsal.list_base_paths()
     assert success, 'fsal failed to list base paths'
-    storages = []
-    for path in base_paths:
-        try:
-            mtab_entry = find_mount_point(path)
-        except ValueError:
-            continue
-        sinfo = get_storage_by_mtab_devname(mtab_entry.dev)
-        if sinfo:
-            sinfo.base_path = path
-            storages.append(sinfo)
-    return storages
+    return Storages(base_paths, lambda s: s.dev is not None)

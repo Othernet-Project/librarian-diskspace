@@ -11,7 +11,7 @@
   diskField = null;
   addDiskField = function() {
     var field;
-    field = $('<input type="hidden" name="disk_id">');
+    field = $('<input type="hidden" name="storage_id">');
     (diskFormContainer.find('form')).append(field);
     return field;
   };
@@ -30,9 +30,9 @@
     (button.find('.icon')).remove();
     return button.prepend("<span class=\"icon icon-" + name + "\"></span>");
   };
-  markDone = function(diskId) {
+  markDone = function(storageId) {
     var button;
-    button = diskFormContainer.find('#' + diskId);
+    button = diskFormContainer.find('#' + storageId);
     setIcon(button, 'ok');
     button.addClass('diskspace-consolidation-started');
     return setTimeout(function() {
@@ -44,12 +44,12 @@
       var res;
       res = $.get(stateUrl);
       return res.done(function(data) {
-        if (data.state != null) {
+        if (data.active != null) {
           reloadForm();
           pollState(diskField);
           return;
         }
-        markDone(diskField);
+        markDone(diskField.val());
       });
     }, 2000);
   };
@@ -79,6 +79,6 @@
   diskFormContainer.on('click', 'button', handleButton);
   diskFormContainer.on('submit', 'form', submitData);
   if (currentId) {
-    return pollState(currentId);
+    return pollState(diskField);
   }
 })(this, this.jQuery, this.templates);

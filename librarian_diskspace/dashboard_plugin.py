@@ -19,7 +19,6 @@ from librarian_dashboard.dashboard import DashboardPlugin
 
 from . import storage
 from .tasks import check_diskspace
-from .routes import consolidate_state
 
 
 try:
@@ -39,6 +38,5 @@ class DiskspaceDashboardPlugin(DashboardPlugin):
     def get_context(self):
         supervisor = request.app.supervisor
         check_diskspace(supervisor)
-        storages = storage.get_content_storages(supervisor)
-        state = consolidate_state()
-        return dict(found_storages=storages, state=state)
+        return dict(storages=storage.get_content_storages(),
+                    active_storage_id=storage.get_consoildate_status())

@@ -7,13 +7,13 @@ from bottle_utils.i18n import i18n_url, lazy_gettext as _
 from bottle_utils.html import hsize
 
 from librarian_core.contrib.templates.renderer import template
+from librarian_core.exts import ext_container as exts
 
+import storage
 from .storage import get_content_storages
 
 gettext = lambda x: x
 
-
-CONSOLIDATE_KEY = 'consolidate_current_id'
 
 # Translators, notification displayed if files were moved to
 # external storage successfully
@@ -26,63 +26,54 @@ CONSOLIDATE_FAILURE = gettext('Files could not be moved to '
                               '{storage_name}')
 
 
-def get_storage_name(storage):
-    name = storage.name
-    is_loop = name and name.startswith('loop')
-    disk = storage.disk
-    if is_loop:
-        name = 'Virtual disk'
-    elif disk.vendor or disk.model:
-        name = '{} {}'.format(disk.vendor or '', disk.model or '')
-    return name
-
-
-def consolidation_notify(supervisor, db, message, priority):
-    supervisor.exts.notifications.send(
+def consolidation_notify(message, priority):
+    exts.notifications.send(
         message,
         category='consolidate_storage',
         dismissable=True,
         group='superuser',
         priority=priority,
-        db=db)
+        db=exts.databases.notifications)
 
 
-def consolidate(supervisor, paths, dest, storage_name):
-    logging.info('Started consolidating to %s', dest)
-    db = supervisor.exts.databases.notifications
-    cache = supervisor.exts.cache
-    success, message = supervisor.exts.fsal.consolidate(paths, dest)
-    supervisor.exts.notifications.delete_by_category('consolidate_storage', db)
-    if success:
-        logging.info('Consolidating to %s finished', dest)
-        message = CONSOLIDATE_SUCCESS.format(storage_name=storage_name)
-        priority = supervisor.exts.notifications.NORMAL
-    else:
-        logging.error('Consolidating to %s failed', dest)
-        message = CONSOLIDATE_FAILURE.format(storage_name=storage_name)
-        priority = supervisor.exts.notifications.URGENT
-    consolidation_notify(supervisor, db, message, priority)
-    cache.delete(CONSOLIDATE_KEY)
+def clear_notifications():
+    exts.notifications.delete_by_category('consolidate_storage',
+                                          exts.databases.notifications)
+
+
+def consolidate_ok(dest):
+    logging.info('Consolidation to %s finished', dest.id)
+    message = CONSOLIDATE_SUCCESS.format(storage_name=dest.humanized_name)
+    priority = exts.notifications.NORMAL
+    consolidation_notify(message, priority)
+
+
+def consolidate_err(dest):
+    logging.error('Consolidation to %s failed', dest.id)
+    message = CONSOLIDATE_FAILURE.format(storage_name=dest.humanized_name)
+    priority = exts.notifications.URGENT
+    consolidation_notify(message, priority)
 
 
 def with_storages(fn):
     @functools.wraps(fn)
     def wrapper(*args, **kwargs):
-        storages = get_content_storages(request.app.supervisor)
+        storages = get_content_storages()
         kwargs['storages'] = storages
         return fn(*args, **kwargs)
     return wrapper
 
 
 def consolidate_state():
-    return {'disk_id': request.app.supervisor.exts.cache.get(CONSOLIDATE_KEY)}
+    return dict(active=storage.get_consoildate_status())
 
 
 @roca_view('diskspace/consolidate.tpl', 'diskspace/_consolidate_form.tpl',
            template_func=template)
 @with_storages
 def show_consolidate_form(storages):
-    return dict(found_storages=storages, state=consolidate_state())
+    return dict(storages=storages,
+                active_storage_id=storage.get_consoildate_status())
 
 
 @roca_view('diskspace/consolidate.tpl', 'diskspace/_consolidate_form.tpl',
@@ -93,17 +84,16 @@ def schedule_consolidate(storages):
     moves content from all other drives to the drive with matching ID """
     supervisor = request.app.supervisor
     tasks = supervisor.exts.tasks
-    cache = supervisor.exts.cache
-    dest_id = request.params.disk_id
+    dest_id = request.params.storage_id
+    active_storage_id = storage.get_consoildate_status()
 
     response_ctx = {
-        'found_storages': storages,
-        'disk_id': dest_id,
-        'state': consolidate_state(),
+        'storages': storages,
+        'target_id': dest_id,
+        'active_storage_id': storage.get_consoildate_status(),
     }
 
-    task_id = cache.get('consolidate_task_id')
-    if task_id:
+    if active_storage_id:
         # There is already a task running, so we can't schedule another one
         # Translators, error message shown when moving of files is
         # attempted while another move task is already running.
@@ -113,68 +103,43 @@ def schedule_consolidate(storages):
                                   'finished.')
         return response_ctx
 
-    # Get source and detinations drives
-    src_drives = []
-    dest_drive = None
-    for s in storages:
-        if s.name == dest_id:
-            dest_drive = s
-        else:
-            src_drives.append(s)
-
-    # Is the destination drive still there?
-    if not dest_drive:
+    # Perform preflight check
+    try:
+        dest = storages.move_preflight(dest_id)
+    except storage.NotFoundError:
         # Translators, error message shown when destination drive is removed or
         # otherwise becomes inaccessible before files are moved to it.
         response_ctx['error'] = _('Destination drive disappeared. Please '
                                   'reattach the drive and retry.')
         return response_ctx
-
-    if not src_drives:
+    except storage.NoMoveTargetError:
         # Translators, error message shown when moving files to a storage
         # device where no other storage devices are present other than the
         # target device.
         response_ctx['error'] = _('There are no other drives to move files '
                                   'from.')
         return response_ctx
-
-    dest_name = get_storage_name(dest_drive)
-    dest = dest_drive.base_path
-    free_space = dest_drive.stat.free
-    total_size = 0
-    paths = [s.base_path for s in src_drives]
-
-    # Calculate total size of all files in all source base paths
-    for p in paths:
-        success, size = supervisor.exts.fsal.get_path_size(p)
-        if not success:
-            response_ctx['error'] = _('Could not calculate file sizes due '
-                                      'to disk error. Please check your '
-                                      'storage device and try again.')
-            return response_ctx
-        total_size += size
-
-    if total_size <= 0:
+    except storage.NothingToMoveError:
         # Translators, error message shown when moving files to a storage
         # device, where no movable files are present.
         response_ctx['error'] = _('There are no files to be moved.')
         return response_ctx
-
-    if not free_space or total_size > free_space:
+    except storage.CapacityError as err:
         # Not enough space on target drive
         response_ctx['error'] = _(
             "Not enough free space. {size} needed.").format(
-                size=hsize(total_size))
+                size=hsize(err.capacity))
         return response_ctx
 
-    tasks.schedule(consolidate,
-                   args=(supervisor, paths, dest, dest_name),
+    tasks.schedule(storages.move_content_to,
+                   args=(dest_id, clear_notifications, consolidate_ok,
+                         consolidate_err),
                    periodic=False)
-    cache.set(CONSOLIDATE_KEY, dest_id)
+    storage.mark_consolidate_started(dest_id)
 
     message = _('Files are now being moved to {destination}. You will be '
                 'notified when the operation is finished.').format(
-                    destination=dest)
+                    destination=dest.humanized_name)
 
     if request.is_xhr:
         response_ctx['message'] = message

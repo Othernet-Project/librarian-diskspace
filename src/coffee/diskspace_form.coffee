@@ -15,7 +15,7 @@
     # button is clicked. We would work around this by submitting to an iframe,
     # but that doesn't sounds so good. Instead, we will add a hidden field that
     # will hold the value we want to submit.
-    field = $ '<input type="hidden" name="disk_id">'
+    field = $ '<input type="hidden" name="storage_id">'
     (diskFormContainer.find 'form').append field
     return field
 
@@ -38,8 +38,8 @@
     button.prepend "<span class=\"icon icon-#{name}\"></span>"
 
 
-  markDone = (diskId) ->
-    button = diskFormContainer.find '#' + diskId
+  markDone = (storageId) ->
+    button = diskFormContainer.find '#' + storageId
     setIcon button, 'ok'
     button.addClass 'diskspace-consolidation-started'
     setTimeout () ->
@@ -51,11 +51,11 @@
     setTimeout () ->
       res = $.get stateUrl
       res.done (data) ->
-        if data.state?
+        if data.active?
           reloadForm()
           pollState diskField
           return
-        markDone diskField
+        markDone diskField.val()
         return
     , 2000
 
@@ -87,8 +87,8 @@
   diskFormContainer.on 'submit', 'form', submitData
 
   if currentId
-    # Cick off the spinner immediately
-    pollState currentId
+    # Kick off the spinner immediately
+    pollState diskField
 
 
 ) this, this.jQuery, this.templates
