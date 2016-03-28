@@ -247,4 +247,4 @@ def get_content_storages():
     """
     success, base_paths = exts.fsal.list_base_paths()
     assert success, 'fsal failed to list base paths'
-    return Storages(base_paths, lambda s: s.dev is not None)
+    return Storages(base_paths, True)
