@@ -32,6 +32,8 @@ def iterpath(path):
     Start from path, and iterate over the tree bottom-up until root is reached.
     Last item returned is always the root.
     """
+    if os.path.islink(path):
+        path = os.readlink(path)
     path = os.path.abspath(path)
     while path != '/':
         yield path
