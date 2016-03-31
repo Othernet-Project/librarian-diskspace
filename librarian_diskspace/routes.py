@@ -90,7 +90,7 @@ def schedule_consolidate(storages):
     response_ctx = {
         'storages': storages,
         'target_id': dest_id,
-        'active_storage_id': storage.get_consoildate_status(),
+        'active_storage_id': active_storage_id,
     }
 
     if active_storage_id:
