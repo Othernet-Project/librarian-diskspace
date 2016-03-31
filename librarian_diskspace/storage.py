@@ -74,7 +74,7 @@ def get_storage_by_mtab_devname(devname):
 
 
 def mark_consolidate_started(storage_id):
-    exts.cache.set(CONSOLIDATE_KEY, storage_id)
+    exts.cache.set(CONSOLIDATE_KEY, storage_id, timeout=0)
 
 
 def mark_consolidate_done():
