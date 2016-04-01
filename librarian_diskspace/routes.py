@@ -26,6 +26,12 @@ CONSOLIDATE_FAILURE = gettext('Files could not be moved to '
                               '{storage_name}')
 
 
+# Translators, notification displayed if moving files to
+# external storage only partially succeeded
+CONSOLIDATE_PARTIAL = gettext('Some files failed to copy to '
+                              '{storage_name}')
+
+
 def consolidation_notify(message, priority):
     exts.notifications.send(
         message,
@@ -51,6 +57,13 @@ def consolidate_ok(dest):
 def consolidate_err(dest):
     logging.error('Consolidation to %s failed', dest.id)
     message = CONSOLIDATE_FAILURE.format(storage_name=dest.humanized_name)
+    priority = exts.notifications.URGENT
+    consolidation_notify(message, priority)
+
+
+def consolidate_partial(dest):
+    logging.error('Consolidation %s partially succeeded', dest.id)
+    message = CONSOLIDATE_PARTIAL.format(storage_name=dest.humanized_name)
     priority = exts.notifications.URGENT
     consolidation_notify(message, priority)
 
@@ -133,7 +146,7 @@ def schedule_consolidate(storages):
 
     tasks.schedule(storages.move_content_to,
                    args=(dest_id, clear_notifications, consolidate_ok,
-                         consolidate_err),
+                         consolidate_err, consolidate_partial),
                    periodic=False)
     storage.mark_consolidate_started(dest_id)
 

@@ -226,7 +226,8 @@ class Storages(list):
 
     def move_content_to(self, storage_id, pre_start=lambda: True,
                         success_cb=lambda d: True,
-                        failure_cb=lambda d: True):
+                        failure_cb=lambda d: True,
+                        partial_cb=lambda d: True):
         try:
             source = self.get(storage_id)
         except NotFoundError:
@@ -234,9 +235,11 @@ class Storages(list):
         dest_path = source.path
         paths = (s.path for s in self.get_all_except(storage_id))
         pre_start()
-        success, message = exts.fsal.consolidate(paths, dest_path)
+        success, is_partial, message = exts.fsal.consolidate(paths, dest_path)
         if success:
             success_cb(source)
+        elif is_partial:
+            partial_cb(source)
         else:
             failure_cb(source)
         mark_consolidate_done()
